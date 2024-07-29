@@ -23,7 +23,7 @@ class Puzzle(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     
-class PuzzleCategories(models.Model):
+class PuzzleCategory(models.Model):
     """
     Table describing the categories of a Puzzle.
     Each puzzle can have N different categories, that are defined in their table.
