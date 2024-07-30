@@ -1,6 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+
 class Puzzle(models.Model):
     title = models.CharField(max_length=150)
 
@@ -20,21 +24,8 @@ class Puzzle(models.Model):
     time_constraint = models.IntegerField() # in us
     memory_constraint = models.IntegerField()
 
-class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    
-class PuzzleCategory(models.Model):
-    """
-    Table describing the categories of a Puzzle.
-    Each puzzle can have N different categories, that are defined in their table.
-    """
+    categories = models.ManyToManyField(Category)
 
-    puzzle = models.ForeignKey(Puzzle, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    
-    constraints = [
-        models.UniqueConstraint(fields=["puzzle", "category"], name="categories_as_set")
-    ]
 
 class PuzzleTest(models.Model):
     input = models.TextField()

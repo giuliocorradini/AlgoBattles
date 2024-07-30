@@ -1,7 +1,7 @@
-from django.urls import path
-
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path("category/", views.CategoryList.as_view(), name="category-list"),
+    path("puzzle/", views.PuzzleList.as_view(), name="puzzle-list"),
 ]
