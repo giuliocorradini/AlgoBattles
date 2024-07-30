@@ -1,7 +1,8 @@
 from rest_framework import generics, pagination, views, status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from . import serializers
-from .models import Puzzle, Category
+from .models import Puzzle, Category, PuzzleTest
 
 class CategoryList(views.APIView):
     def get(self, request):
@@ -32,3 +33,11 @@ class PuzzleList(generics.ListAPIView):
             puzzles = puzzles.filter(difficulty=difficulty)
         
         return puzzles
+    
+
+@api_view(["GET"])
+def public_tests_for_puzzle(request, pk):
+    queryset = PuzzleTest.objects.all().filter(problem__id=pk, is_private=False)
+    serializer = serializers.PuzzleTestListSerializer(queryset, many=True)
+
+    return Response(serializer.data, status.HTTP_200_OK)

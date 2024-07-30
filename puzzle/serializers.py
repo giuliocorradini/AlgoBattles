@@ -11,3 +11,9 @@ class PuzzleListSerializer(serializers.ModelSerializer):
 
     def get_categories(self, obj):
         return list(obj.categories.values_list('name', flat=True))
+
+
+class PuzzleTestListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PuzzleTest
+        fields = ("input", "output")
