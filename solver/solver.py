@@ -19,10 +19,11 @@ logging.basicConfig(level=logging.DEBUG)
 def main(timeout) -> int:
     results = {}
 
-    with open("/chunk/input.txt", "r") as ifp, open("/chunk/output.txt") as ofp:
-        for i, in_line, expected_out in enumerate(zip(ifp, ofp)):
+    with open("/chunk/tests.txt", "r") as tfp:
+        tests = json.load(fp=tfp)
+        for i, in_line, expected_out in tests:
             try:
-                result = subprocess.run("/chunk/artifact", input=in_line, capture_output=True, timeout=timeout)
+                result = subprocess.run("/chunk/artifact", input=in_line.encode(), capture_output=True, timeout=timeout)
 
                 produced_output = result.stdout.decode()
                 if produced_output == expected_out:
@@ -38,4 +39,4 @@ def main(timeout) -> int:
     print(json.dumps(results)) 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(int(sys.argv[1]))
