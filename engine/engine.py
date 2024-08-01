@@ -9,6 +9,7 @@ import os
 import logging
 import docker
 #from .connector import Connector
+import base64
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -25,24 +26,36 @@ class Engine():
 
         #self.connector = Connector()
 
-    def new_chunk(self, uid):
+    def _new_chunk(self, uid):
         chunk = os.path.join(self.workingdir, uid)
         os.mkdir(chunk)
 
         return os.path.abspath(chunk)
     
-    def save_source(self, chunk, source):
+    def _save_source(self, chunk, source):
         with open(os.path.join(chunk, "source.c"), "w") as fp:
             fp.write(source)
 
-    def handle_compile_request(self, request):
-        logging.debug(f"Handling compile request from connector {request}")
-        pass
+    def _is_supported_language(self, lang):
+        return lang.lower() == "c"
 
-    def compile(self, language, source, uid):
+    def handle_build(self, request):
+        """Check if request is a valid build request, then decodes source code (which is in base64 form)"""
+        logging.debug(f"Handling build request from connector {request}")
+
+        uid = request.get("uid")
+        language = request.get("language")
+        if not self._is_supported_language(language):
+            logging.error("Unsupported language")
+
+        source = base64.b64decode(request.get("source")).decode("utf-8")
+        
+        self.compile(language, source, uid)
+
+    def compile(self, language, source, uid, *args, **kwargs):
         """Compile a source. Create container, and start compile process."""
-        chunk = self.new_chunk(uid)
-        self.save_source(chunk, source)
+        chunk = self._new_chunk(uid)
+        self._save_source(chunk, source)
 
         
         worker = self.client.containers.create(
@@ -74,11 +87,11 @@ class Engine():
         """
     
         message = {
-            "process": process,
+            "type": process,
             "uid": uid,
         }
 
-        if process == "compile":
+        if process == "build":
             message |= {
                 "status": kwargs.get("status"), # success or fail
                 "errors": kwargs.get("errors")  # compiler errors
