@@ -49,10 +49,16 @@ class Connector():
         """Subscribes to topics and connects callbacks"""
 
         await self.consumer.create_stream(stream=Connector.BUILD_STREAM_NAME, exists_ok=True, arguments={"MaxLengthBytes": Connector.STREAM_RETENTION})
+        await self.consumer.create_stream(stream=Connector.EXEC_STREAM_NAME, exists_ok=True, arguments={"MaxLengthBytes": Connector.STREAM_RETENTION})
 
         await self.consumer.subscribe(
             stream=Connector.BUILD_STREAM_NAME,
             callback=self.handle_build,
+            offset_specification=ConsumerOffsetSpecification(OffsetType.FIRST, None)
+        )
+        await self.consumer.subscribe(
+            stream=Connector.EXEC_STREAM_NAME,
+            callback=self.handle_test,
             offset_specification=ConsumerOffsetSpecification(OffsetType.FIRST, None)
         )
 
@@ -63,6 +69,14 @@ class Connector():
             return False
         
         self.engine.handle_build(request)
+
+    @message_handler
+    async def handle_test(self, request: dict):
+        if request.get("type") != "test":
+            logging.warning("Received a message that is not a test request")
+            return False
+        
+        self.engine.handle_test(request)
 
     async def loop(self):
         await self.consumer.start()

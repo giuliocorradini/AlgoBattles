@@ -8,8 +8,8 @@ This module communicates with Django using a message broker.
 import os
 import logging
 import docker
-#from .connector import Connector
 import base64
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -30,6 +30,10 @@ class Engine():
         chunk = os.path.join(self.workingdir, uid)
         os.mkdir(chunk)
 
+        return os.path.abspath(chunk)
+    
+    def _get_chunk(self, uid):
+        chunk = os.path.join(self.workingdir, uid)
         return os.path.abspath(chunk)
     
     def _save_source(self, chunk, source):
@@ -71,16 +75,54 @@ class Engine():
             exit = worker.wait()
             logging.debug(f"Completed")
             if exit["StatusCode"] == 0:
-                self.signal("compile", uid, status="success")
+                self.signal("build", uid, chunk=chunk, status="success")
             else:
                 logs = worker.logs(stdout=False, stderr=True).decode('utf-8')
-                self.signal("compile", uid, status="fail", errors=logs)
+                self.signal("build", uid, chunk=chunk, status="fail", errors=logs)
 
         except Exception as e:
             print(e)
             worker.remove()
 
-    def signal(self, process, uid, **kwargs):
+    def handle_test(self, request):
+        """Check if request is a valid test request"""
+        logging.debug(f"Handling test request from connector {request}")
+
+        uid = request.get("uid")
+        if uid is None:
+            logging.error("Invalid UID for test request")
+            return False
+        
+        self.test(self, uid)
+
+    def test(self, source, uid):
+        """Test compiled binary against private test cases."""
+        chunk = self._get_chunk(uid)
+
+        worker = self.client.containers.create(
+            image = "algobattles-solver",
+            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+            network_disabled = True,
+            command=f"python solver.py {1000000}"
+        )
+
+        try:
+            worker.start()
+            exit = worker.wait()
+            logging.debug(f"Completed")
+            if exit["StatusCode"] == 0:
+                results = worker.logs(stdout=True, stderr=False).decode('utf-8')
+                results = json.loads(results)
+                self.signal("test", uid, chunk=chunk, status="success", results=results)
+            else:
+                logs = worker.logs(stdout=False, stderr=True).decode('utf-8')
+                self.signal("test", uid, chunk=chunk, status="fail", errors=logs)
+
+        except Exception as e:
+            print(e)
+            worker.remove()
+
+    def signal(self, process, uid, chunk, status, **kwargs):
         """Signal the end of a process (compile, testrun) with a result and a value
         When compiling, if status is "success", this message will update the web client telling
         the program compiled, and will trigger a test run.
@@ -89,17 +131,21 @@ class Engine():
         message = {
             "type": process,
             "uid": uid,
+            "chunk": chunk,
+            "status": status # success or fail
         }
 
-        if process == "build":
+        if status == "fail":
             message |= {
-                "status": kwargs.get("status"), # success or fail
                 "errors": kwargs.get("errors")  # compiler errors
             }
 
+        elif status == "success" and process == "test":
+            message |= {"results": kwargs.get("results")}
+
         #self.connector.signal(message)
         logging.debug(f"Message to connector {message}")
-        if kwargs.get("status") == "fail":
+        if status == "fail":
             logging.debug(kwargs["errors"])
 
 if __name__ == "__main__":
