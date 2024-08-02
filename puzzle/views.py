@@ -35,6 +35,17 @@ class PuzzleList(generics.ListAPIView):
         return puzzles
     
 
+class PuzzleView(generics.RetrieveAPIView):
+    serializer_class = serializers.PuzzleViewSerializer
+    
+    def get_queryset(self):
+        try:
+            pk = int(self.kwargs['pk'])
+        except ValueError:
+            return Puzzle.objects.none
+
+        return Puzzle.objects.filter(pk=pk)
+
 @api_view(["GET"])
 def public_tests_for_puzzle(request, pk):
     queryset = PuzzleTest.objects.all().filter(problem__id=pk, is_private=False)
