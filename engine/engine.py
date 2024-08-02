@@ -11,6 +11,9 @@ import docker
 import base64
 import json
 
+import docker.models
+import docker.models.containers
+
 logging.basicConfig(level=logging.DEBUG)
 
 class Engine():
@@ -36,12 +39,24 @@ class Engine():
         chunk = os.path.join(self.workingdir, uid)
         return os.path.abspath(chunk)
     
-    def _save_source(self, chunk, source):
-        with open(os.path.join(chunk, "source.c"), "w") as fp:
+    def __get_extension_for_language(self, language):
+        if language == "c":
+            return ".c"
+        if language == "c++":
+            return ".cpp"
+    
+    def _save_source(self, chunk, source, language):
+        ext = self.__get_extension_for_language(language)
+
+        with open(os.path.join(chunk, "source" + ext), "w") as fp:
             fp.write(source)
 
     def _is_supported_language(self, lang):
-        return lang.lower() == "c"
+        supported = set((
+            "c", "c++"
+        ))
+        
+        return lang.lower() in supported
 
     def handle_build(self, request):
         """Check if request is a valid build request, then decodes source code (which is in base64 form)"""
@@ -51,24 +66,39 @@ class Engine():
         language = request.get("language")
         if not self._is_supported_language(language):
             logging.error("Unsupported language")
+            self.signal("build", uid, None, "fail", errors="Unsupported language")
 
         source = base64.b64decode(request.get("source")).decode("utf-8")
         
         self.compile(language, source, uid)
 
-    def compile(self, language, source, uid, *args, **kwargs):
-        """Compile a source. Create container, and start compile process."""
-        chunk = self._new_chunk(uid)
-        self._save_source(chunk, source)
-
-        
-        worker = self.client.containers.create(
+    def _c_compiler(self, chunk) -> docker.models.containers.Container:
+        return self.client.containers.create(
             image = "gcc:latest",
             command = "gcc -o artifact source.c",
             volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
             working_dir = "/chunk",
             network_disabled = True
         )
+
+    def _cpp_compiler(self, chunk) -> docker.models.containers.Container:
+        return self.client.containers.create(
+            image = "gcc:latest",
+            command = "g++ -o artifact source.cpp",
+            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+            working_dir = "/chunk",
+            network_disabled = True
+        )
+
+    def compile(self, language, source, uid, *args, **kwargs):
+        """Compile a source. Create container, and start compile process."""
+        chunk = self._new_chunk(uid)
+        self._save_source(chunk, source, language)
+
+        if language == "c":
+            worker = self._c_compiler(chunk)
+        elif language == "c++":
+            worker = self._cpp_compiler(chunk)
 
         try:
             worker.start()
