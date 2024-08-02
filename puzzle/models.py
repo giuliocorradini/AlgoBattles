@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import constraints
+from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from allauth.account.models import get_user_model
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -17,7 +17,7 @@ class Puzzle(models.Model):
 
     difficulty = models.CharField(
         max_length=1,
-        choices=DifficultyLevel,
+        choices=DifficultyLevel.choices,
         default=DifficultyLevel.EASY
     )
 
@@ -42,7 +42,7 @@ class Development(models.Model):
     """Each user develops (once) on a puzzle, that holds every attempt at solving it"""
 
     puzzle = models.ForeignKey(Puzzle, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     constraints = [
         constraints.UniqueConstraint(puzzle, user, name="unique_puzzle_development_per_user")
