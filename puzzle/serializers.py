@@ -29,3 +29,8 @@ class PuzzleViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Puzzle
         fields = "__all__"
+
+class AttemptListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Attempt
+        fields = ("passed", "results")
