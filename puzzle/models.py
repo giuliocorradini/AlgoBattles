@@ -54,4 +54,5 @@ class Attempt(models.Model):
     development = models.ForeignKey(Development, on_delete=models.CASCADE)
     passed = models.BooleanField()
     results = models.TextField()    # Test results JSON-encoded
+    on_date = models.DateTimeField(auto_now=True)
 
