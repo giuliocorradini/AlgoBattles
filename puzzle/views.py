@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from . import serializers
 from .models import Puzzle, Category, PuzzleTest, Development, Attempt
+from engine.tasks import build, test
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -87,9 +88,11 @@ class AttemptsView(viewsets.ModelViewSet):
 
         # request.data is a base64 encoded JSON string representing the content of the editor
 
+        a = Attempt.objects.create(development=dev, passed=False, results="")
+
         logging.info("Sending message to broker")
         logging.info(request.data)
-        a = Attempt.objects.create(development=dev, passed=False, results="")
-        a.save()
+        uid = str(a.pk)
+        build.delay("c", request.data, uid)
 
         return Response(status=status.HTTP_201_CREATED)

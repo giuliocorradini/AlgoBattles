@@ -14,7 +14,7 @@ import json
 import docker.models
 import docker.models.containers
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 class Engine():
     VOLUME_NAME = "algobattles-engine"
