@@ -14,8 +14,6 @@ import json
 import docker.models
 import docker.models.containers
 
-logging.basicConfig(level=logging.INFO)
-
 class Engine():
     VOLUME_NAME = "algobattles-engine"
 
@@ -58,17 +56,14 @@ class Engine():
         
         return lang.lower() in supported
 
-    def handle_build(self, request):
+    def handle_build(self, language, source, uid):
         """Check if request is a valid build request, then decodes source code (which is in base64 form)"""
-        logging.debug(f"Handling build request from connector {request}")
 
-        uid = request.get("uid")
-        language = request.get("language")
         if not self._is_supported_language(language):
             logging.error("Unsupported language")
             self.signal("build", uid, None, "fail", errors="Unsupported language")
 
-        source = base64.b64decode(request.get("source")).decode("utf-8")
+        source = base64.b64decode(source).decode("utf-8")
         
         self.compile(language, source, uid)
 
@@ -114,11 +109,10 @@ class Engine():
             print(e)
             worker.remove()
 
-    def handle_test(self, request):
+    def handle_test(self, source, uid):
         """Check if request is a valid test request"""
-        logging.debug(f"Handling test request from connector {request}")
 
-        uid = request.get("uid")
+        #TODO: check that UID corresponds to a valid chunk
         if uid is None:
             logging.error("Invalid UID for test request")
             return False
@@ -176,7 +170,7 @@ class Engine():
         #self.connector.signal(message)
         logging.debug(f"Message to connector {message}")
         if status == "fail":
-            logging.debug(kwargs["errors"])
+            logging.warn(kwargs["errors"])
 
 if __name__ == "__main__":
     e = Engine()
