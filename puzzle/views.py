@@ -52,7 +52,7 @@ class PuzzleView(generics.RetrieveAPIView):
 
 @api_view(["GET"])
 def public_tests_for_puzzle(request, pk):
-    queryset = PuzzleTest.objects.all().filter(problem__id=pk, is_private=False)
+    queryset = PuzzleTest.objects.all().filter(puzzle__id=pk, is_private=False)
     serializer = serializers.PuzzleTestListSerializer(queryset, many=True)
 
     return Response(serializer.data, status.HTTP_200_OK)
