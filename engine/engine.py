@@ -14,6 +14,8 @@ import json
 import docker.models
 import docker.models.containers
 
+from .language import C, Cpp
+
 class Chunk():
     def __init__(self, uid, workingdir):
         relative = os.path.join(workingdir, uid)
@@ -28,6 +30,11 @@ class Chunk():
 class Engine():
     VOLUME_NAME = "algobattles-engine"
 
+    languages = {
+        "c": C(),
+        "c++": Cpp()
+    }
+
     def __init__(self) -> None:
         self.configure()
         
@@ -36,64 +43,35 @@ class Engine():
         self.workingdir = "abengine-workdir"
         os.makedirs(self.workingdir, exist_ok=True)
     
-    def __get_extension_for_language(self, language):
-        if language == "c":
-            return ".c"
-        if language == "c++":
-            return ".cpp"
-    
     def _save_source(self, chunk: Chunk, source, language):
-        ext = self.__get_extension_for_language(language)
+        ext = language.extension
 
         with open(os.path.join(chunk.absdir, "source" + ext), "w") as fp:
             fp.write(source)
 
-    def _is_supported_language(self, lang):
-        supported = set((
-            "c", "c++"
-        ))
-        
-        return lang.lower() in supported
+    def _check_source(self, langid, source, uid):
+        """Check if the language id provided is supported by this engine, and decodes the source
+        code from base64"""
 
-    def _check_source(self, language, source, uid):
-        """Check if request is a valid build request, then decodes source code (which is in base64 form)"""
+        language = self.languages.get(langid)
 
-        if not self._is_supported_language(language):
+        if language is None:
             logging.error("Unsupported language")
             self.signal("build", uid, None, "fail", errors="Unsupported language")
-            return None
+            return None, None
 
         source = base64.b64decode(source).decode("utf-8")
-        return source
+        return source, language
 
-    def _c_compiler(self, chunk) -> docker.models.containers.Container:
-        return self.client.containers.create(
-            image = "gcc:latest",
-            command = "gcc -o artifact source.c",
-            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
-            working_dir = "/chunk",
-            network_disabled = True
-        )
-
-    def _cpp_compiler(self, chunk) -> docker.models.containers.Container:
-        return self.client.containers.create(
-            image = "gcc:latest",
-            command = "g++ -o artifact source.cpp",
-            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
-            working_dir = "/chunk",
-            network_disabled = True
-        )
-
-    def compile(self, language, source, uid, *args, **kwargs):
+    def compile(self, langid, source, uid, *args, **kwargs):
         """Compile a source. Create container, and start compile process."""
         chunk = Chunk(uid, self.workingdir)
-        source = self._check_source(language, source, uid)
+        source, language = self._check_source(langid, source, uid)
         self._save_source(chunk, source, language)
 
-        if language == "c":
-            worker = self._c_compiler(chunk.absdir)
-        elif language == "c++":
-            worker = self._cpp_compiler(chunk.absdir)
+        worker = language.get_compiler(self.client, chunk.absdir)
+        if not worker:
+            raise ValueError("Cannot create worker compiler")
 
         try:
             worker.start()
@@ -172,16 +150,3 @@ class Engine():
         logging.debug(f"Message to connector {message}")
         if status == "fail":
             logging.warn(kwargs["errors"])
-
-if __name__ == "__main__":
-    e = Engine()
-    source = """
-#include <stdio.h>
-
-int main() {
-    printf(\"Test abengine\\n\");
-    return 77;
-}"""
-
-    e.compile("C", source, "user1_puzzle1_attempt1")
-    

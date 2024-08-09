@@ -86,8 +86,6 @@ class AttemptsView(viewsets.ModelViewSet):
         
         dev = self._corresponding_development(request.user, pk)
 
-        # request.data is a base64 encoded JSON string representing the content of the editor
-
         a = Attempt.objects.create(development=dev, passed=False, results="")
         uid = str(a.pk)
 
@@ -98,7 +96,7 @@ class AttemptsView(viewsets.ModelViewSet):
 
         print(tests)
 
-        task_id = test_chain("c", request.data, uid, tests)
+        task_id = test_chain(request.data.get("language"), request.data.get("source"), uid, tests)
         a.task_id = task_id
         a.save()
 
