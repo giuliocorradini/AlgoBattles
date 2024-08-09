@@ -55,4 +55,5 @@ class Attempt(models.Model):
     passed = models.BooleanField()
     results = models.TextField()    # Test results JSON-encoded
     on_date = models.DateTimeField(auto_now=True)
+    task_id = models.CharField(max_length=255)
 

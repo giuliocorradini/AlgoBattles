@@ -13,7 +13,10 @@ def test(chunk, uid, tests):
 
 def test_chain(language, source, uid, tests):
     """Build and tests the provided call by running
-    the build and test tasks in a chain"""
+    the build and test tasks in a chain.
+    
+    Returns the chain task ID. Can be used to retrieve the task result later on.
+    """
 
     res = build.apply_async((language, source, uid), link=test.s(uid, tests))
-    #print(res.get())
+    return res.id

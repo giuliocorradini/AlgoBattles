@@ -98,6 +98,8 @@ class AttemptsView(viewsets.ModelViewSet):
 
         print(tests)
 
-        test_chain("c", request.data, uid, tests)
+        task_id = test_chain("c", request.data, uid, tests)
+        a.task_id = task_id
+        a.save()
 
         return Response(status=status.HTTP_201_CREATED)

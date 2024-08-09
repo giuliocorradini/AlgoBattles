@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'django_celery_results'
 ]
 
 MIDDLEWARE = [
@@ -130,6 +131,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Django REST Framework
+
 SITE_ID = 1
 
 REST_FRAMEWORK = {
@@ -137,3 +141,8 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ]
 }
+
+
+# Celery
+
+CELERY_RESULT_BACKEND = "django-db"
