@@ -7,11 +7,11 @@ class Language():
     def __init__(self, name, extension):
         self.name = name
         self.extension = extension
-
-    def __eq__(self, value: str):
-        """Compare language based on its name"""
-
-        return self.name == value
+        self.default_filename = "source"
+    
+    @property
+    def source_file(self):
+        return self.default_filename + self.extension
 
     def get_compiler(self, docker) -> Container:
         pass
@@ -37,6 +37,20 @@ class Cpp(Language):
         return docker.containers.create(
             image = "gcc:latest",
             command = "g++ -o artifact source.cpp",
+            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+            working_dir = "/chunk",
+            network_disabled = True
+        )
+    
+class Java(Language):
+    def __init__(self):
+        super().__init__("java", ".java")
+        self.default_filename = "Main"
+
+    def get_compiler(self, docker, chunk) -> Container:
+        return docker.containers.create(
+            image = "eclipse-temurin:latest",
+            command = f"javac {self.source_file}",
             volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
             working_dir = "/chunk",
             network_disabled = True

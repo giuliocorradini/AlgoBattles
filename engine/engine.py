@@ -44,9 +44,7 @@ class Engine():
         os.makedirs(self.workingdir, exist_ok=True)
     
     def _save_source(self, chunk: Chunk, source, language):
-        ext = language.extension
-
-        with open(os.path.join(chunk.absdir, "source" + ext), "w") as fp:
+        with open(os.path.join(chunk.absdir, language.source_file), "w") as fp:
             fp.write(source)
 
     def _check_source(self, langid, source, uid):
