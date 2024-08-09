@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'puzzle.apps.PuzzleConfig',
     'restauth.apps.RestAuthConfig',
     'engine.apps.EngineConfig',
+    'userprofile.apps.UserprofileConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
