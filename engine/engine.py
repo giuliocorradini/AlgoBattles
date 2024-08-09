@@ -108,6 +108,8 @@ class Engine():
 
         except Exception as e:
             print(e)
+
+        finally:
             worker.remove()
 
         return chunk.absdir
@@ -136,6 +138,8 @@ class Engine():
 
         except Exception as e:
             print(e)
+
+        finally:
             worker.remove()
 
     def signal(self, process, uid, chunk, status, **kwargs):
