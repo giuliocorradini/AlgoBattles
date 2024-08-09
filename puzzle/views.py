@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from . import serializers
 from .models import Puzzle, Category, PuzzleTest, Development, Attempt
-from engine.tasks import build, test
+from engine.tasks import test_chain
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -93,6 +93,6 @@ class AttemptsView(viewsets.ModelViewSet):
         logging.info("Sending message to broker")
         logging.info(request.data)
         uid = str(a.pk)
-        build.delay("c", request.data, uid)
+        test_chain("c", request.data, uid)
 
         return Response(status=status.HTTP_201_CREATED)

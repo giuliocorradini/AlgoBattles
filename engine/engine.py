@@ -14,6 +14,17 @@ import json
 import docker.models
 import docker.models.containers
 
+class Chunk():
+    def __init__(self, uid, workingdir):
+        relative = os.path.join(workingdir, uid)
+        self.__chunk = os.path.abspath(relative)
+
+        os.mkdir(self.__chunk)
+
+    @property
+    def absdir(self):
+        return self.__chunk
+
 class Engine():
     VOLUME_NAME = "algobattles-engine"
 
@@ -24,18 +35,6 @@ class Engine():
         self.client = docker.from_env()
         self.workingdir = "abengine-workdir"
         os.makedirs(self.workingdir, exist_ok=True)
-
-        #self.connector = Connector()
-
-    def _new_chunk(self, uid):
-        chunk = os.path.join(self.workingdir, uid)
-        os.mkdir(chunk)
-
-        return os.path.abspath(chunk)
-    
-    def _get_chunk(self, uid):
-        chunk = os.path.join(self.workingdir, uid)
-        return os.path.abspath(chunk)
     
     def __get_extension_for_language(self, language):
         if language == "c":
@@ -43,10 +42,10 @@ class Engine():
         if language == "c++":
             return ".cpp"
     
-    def _save_source(self, chunk, source, language):
+    def _save_source(self, chunk: Chunk, source, language):
         ext = self.__get_extension_for_language(language)
 
-        with open(os.path.join(chunk, "source" + ext), "w") as fp:
+        with open(os.path.join(chunk.absdir, "source" + ext), "w") as fp:
             fp.write(source)
 
     def _is_supported_language(self, lang):
@@ -56,16 +55,16 @@ class Engine():
         
         return lang.lower() in supported
 
-    def handle_build(self, language, source, uid):
+    def _check_source(self, language, source, uid):
         """Check if request is a valid build request, then decodes source code (which is in base64 form)"""
 
         if not self._is_supported_language(language):
             logging.error("Unsupported language")
             self.signal("build", uid, None, "fail", errors="Unsupported language")
+            return None
 
         source = base64.b64decode(source).decode("utf-8")
-        
-        self.compile(language, source, uid)
+        return source
 
     def _c_compiler(self, chunk) -> docker.models.containers.Container:
         return self.client.containers.create(
@@ -87,13 +86,15 @@ class Engine():
 
     def compile(self, language, source, uid, *args, **kwargs):
         """Compile a source. Create container, and start compile process."""
-        chunk = self._new_chunk(uid)
+        chunk = Chunk(uid, self.workingdir)
+        print(f"Chunky chunk {chunk}")
+        source = self._check_source(language, source, uid)
         self._save_source(chunk, source, language)
 
         if language == "c":
-            worker = self._c_compiler(chunk)
+            worker = self._c_compiler(chunk.absdir)
         elif language == "c++":
-            worker = self._cpp_compiler(chunk)
+            worker = self._cpp_compiler(chunk.absdir)
 
         try:
             worker.start()
@@ -109,19 +110,10 @@ class Engine():
             print(e)
             worker.remove()
 
-    def handle_test(self, source, uid):
-        """Check if request is a valid test request"""
+        return chunk.absdir
 
-        #TODO: check that UID corresponds to a valid chunk
-        if uid is None:
-            logging.error("Invalid UID for test request")
-            return False
-        
-        self.test(self, uid)
-
-    def test(self, source, uid):
+    def test(self, chunk, uid):
         """Test compiled binary against private test cases."""
-        chunk = self._get_chunk(uid)
 
         worker = self.client.containers.create(
             image = "algobattles-solver",
