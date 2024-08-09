@@ -111,40 +111,18 @@ class Engine():
             logging.debug(f"Completed")
             if exit["StatusCode"] == 0:
                 results = worker.logs(stdout=True, stderr=False).decode('utf-8')
-                results = json.loads(results)
-                self.signal("test", uid, chunk=chunk, status="success", results=results)
+                logging.info(worker.logs(stderr=True, stdout=False).decode('utf-8'))
+                ret = ("solver_success", results)
             else:
                 logs = worker.logs(stdout=False, stderr=True).decode('utf-8')
-                self.signal("test", uid, chunk=chunk, status="fail", errors=logs)
+                ret = ("solver_fail", logs)
 
         except Exception as e:
-            print(e)
+            logging.error(str(e))
+            ret = ("engine_fail", e)
 
         finally:
             worker.remove()
 
-    def signal(self, process, uid, chunk, status, **kwargs):
-        """Signal the end of a process (compile, testrun) with a result and a value
-        When compiling, if status is "success", this message will update the web client telling
-        the program compiled, and will trigger a test run.
-        """
+        return ret
     
-        message = {
-            "type": process,
-            "uid": uid,
-            "chunk": chunk,
-            "status": status # success or fail
-        }
-
-        if status == "fail":
-            message |= {
-                "errors": kwargs.get("errors")  # compiler errors
-            }
-
-        elif status == "success" and process == "test":
-            message |= {"results": kwargs.get("results")}
-
-        #self.connector.signal(message)
-        logging.debug(f"Message to connector {message}")
-        if status == "fail":
-            logging.warn(kwargs["errors"])

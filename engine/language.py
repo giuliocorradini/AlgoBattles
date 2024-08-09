@@ -22,7 +22,7 @@ class C(Language):
 
     def get_compiler(self, docker, chunk) -> Container:
         return docker.containers.create(
-            image = "gcc:latest",
+            image = "gcc:11",
             command = "gcc -o artifact source.c",
             volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
             working_dir = "/chunk",
@@ -35,7 +35,7 @@ class Cpp(Language):
 
     def get_compiler(self, docker, chunk) -> Container:
         return docker.containers.create(
-            image = "gcc:latest",
+            image = "gcc:11",
             command = "g++ -o artifact source.cpp",
             volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
             working_dir = "/chunk",

@@ -90,7 +90,6 @@ class AttemptsView(viewsets.ModelViewSet):
         uid = str(a.pk)
 
         priv_tests = PuzzleTest.objects.filter(puzzle__id=pk, is_private=True)
-        print(priv_tests)
 
         tests = [(i, t.input, t.output) for i, t in enumerate(priv_tests)]
 

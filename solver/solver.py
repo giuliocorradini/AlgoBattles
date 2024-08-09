@@ -30,7 +30,7 @@ def main(timeout) -> int:
                     logging.info(f"Test {i} passed")
                     results[i] = "passed"
                 else:
-                    logging.warn(f"Test {i} not passed")
+                    logging.warning(f"Test {i} not passed. Expected {expected_out} but got {produced_output}")
                     results[i] = "failed"
             
             except TimeoutError as te:
