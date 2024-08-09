@@ -35,7 +35,7 @@ class PuzzleTest(models.Model):
     
     is_private = models.BooleanField()
 
-    problem = models.ForeignKey(Puzzle, on_delete=models.CASCADE)
+    puzzle = models.ForeignKey(Puzzle, on_delete=models.CASCADE)
 
 
 class Development(models.Model):

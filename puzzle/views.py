@@ -80,7 +80,7 @@ class AttemptsView(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def create_for_puzzle(self, request, pk):
         try:
-            pk = int(pk)
+            pk = int(pk)    #puzzle key
         except ValueError:
             return Response({"reason": "Invalid puzzle key"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -89,10 +89,15 @@ class AttemptsView(viewsets.ModelViewSet):
         # request.data is a base64 encoded JSON string representing the content of the editor
 
         a = Attempt.objects.create(development=dev, passed=False, results="")
-
-        logging.info("Sending message to broker")
-        logging.info(request.data)
         uid = str(a.pk)
-        test_chain("c", request.data, uid)
+
+        priv_tests = PuzzleTest.objects.filter(puzzle__id=pk, is_private=True)
+        print(priv_tests)
+
+        tests = [(i, t.input, t.output) for i, t in enumerate(priv_tests)]
+
+        print(tests)
+
+        test_chain("c", request.data, uid, tests)
 
         return Response(status=status.HTTP_201_CREATED)

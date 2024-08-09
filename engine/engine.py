@@ -87,7 +87,6 @@ class Engine():
     def compile(self, language, source, uid, *args, **kwargs):
         """Compile a source. Create container, and start compile process."""
         chunk = Chunk(uid, self.workingdir)
-        print(f"Chunky chunk {chunk}")
         source = self._check_source(language, source, uid)
         self._save_source(chunk, source, language)
 
@@ -111,11 +110,17 @@ class Engine():
 
         finally:
             worker.remove()
-
+        
         return chunk.absdir
+    
+    def _put_tests_file(self, chunk, tests):
+        with open(os.path.join(chunk, "tests.txt"), "w") as fp:
+            json.dump(tests, fp)
 
-    def test(self, chunk, uid):
+    def test(self, chunk, uid, tests):
         """Test compiled binary against private test cases."""
+
+        self._put_tests_file(chunk, tests)
 
         worker = self.client.containers.create(
             image = "algobattles-solver",
