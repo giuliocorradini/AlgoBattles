@@ -51,6 +51,7 @@ class Engine():
         """Check if the language id provided is supported by this engine, and decodes the source
         code from base64"""
 
+        langid = langid.lower()
         language = self.languages.get(langid)
 
         if language is None:
