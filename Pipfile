@@ -9,6 +9,7 @@ djangorestframework = "*"
 celery = "*"
 django-celery-results = "*"
 pillow = "*"
+docker = "*"
 
 [dev-packages]
 
