@@ -100,3 +100,10 @@ class AttemptsView(viewsets.ModelViewSet):
         a.save()
 
         return Response(status=status.HTTP_201_CREATED)
+
+class CompletedPuzzleView(generics.RetrieveAPIView):
+    serializer_class = serializers.PuzzleListSerializer
+    authentication_classes = authentication.TokenAuthentication
+    
+    def get_queryset(self):
+        return Puzzle.objects.filter()
