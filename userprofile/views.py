@@ -5,6 +5,18 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import UserFullInformationSerializer, UserInformationSerializer
 from .models import Profile
 
+
+class IsBrowserAuthenticated(IsAuthenticated):
+    """
+    Does not check authentication on OPTIONS methods, used by browser to get CORS headers.
+    """
+
+    def has_permission(self, request, view):
+        if request.method == 'OPTIONS':
+            return True
+        return request.user and request.user.is_authenticated
+
+
 class UserFullInformationView(RetrieveAPIView):
     """
     Provides full information about a user, can only be accessed by the user itself.
@@ -12,7 +24,7 @@ class UserFullInformationView(RetrieveAPIView):
     """
 
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsBrowserAuthenticated]
     serializer_class = UserFullInformationSerializer
 
     def get_object(self):
