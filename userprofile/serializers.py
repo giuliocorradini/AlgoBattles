@@ -16,6 +16,14 @@ class UserFullInformationSerializer(serializers.ModelSerializer):
         fields = ("username", "email", "first_name", "last_name", "github", "linkedin", "picture")
 
 
+class UserPasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    
+    class Meta:
+        model = User
+    
+
 class UserInformationSerializer(serializers.ModelSerializer):
     """
     This class provides user information except email.
