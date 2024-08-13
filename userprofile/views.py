@@ -4,7 +4,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FileUploadParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import UserFullInformationSerializer, UserInformationSerializer, UserPasswordSerializer, ProfilePictureSerializer
 from .models import Profile
 
@@ -80,9 +80,10 @@ class ProfilePictureView(UpdateAPIView):
     serializer_class = ProfilePictureSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsBrowserAuthenticated]
-    parser_classes = [MultiPartParser, FileUploadParser]
+    parser_classes = [MultiPartParser, FormParser]
 
     #TODO: limit size
+    #TODO: rename file on upload
 
     def get_object(self):
-        return self.request.user
+        return Profile.objects.get(user=self.request.user)
