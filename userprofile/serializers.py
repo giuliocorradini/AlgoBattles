@@ -6,11 +6,13 @@ class UserFullInformationSerializer(serializers.ModelSerializer):
     """
     This class provides full user information. For user introspection.
     """
-    email = serializers.CharField(source="user.email", required=False)
-    username = serializers.CharField(source="user.username", required=False)
-    first_name = serializers.CharField(source="user.first_name", required=False)
-    last_name = serializers.CharField(source="user.last_name", required=False)
+    email = serializers.CharField(source="user.email", required=False, allow_blank=False)
+    username = serializers.CharField(source="user.username", required=False, allow_blank=False)
+    first_name = serializers.CharField(source="user.first_name", required=False, allow_blank=True)
+    last_name = serializers.CharField(source="user.last_name", required=False, allow_blank=True)
     picture = serializers.ImageField(required=False, allow_null=True, use_url=True, read_only=True)
+    github = serializers.CharField(allow_blank=True)
+    linkedin = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = Profile
