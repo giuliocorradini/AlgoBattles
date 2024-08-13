@@ -1,10 +1,11 @@
-from rest_framework import generics, pagination, views, status, authentication, viewsets
+from rest_framework import generics, pagination, views, status, authentication, viewsets, permissions
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from . import serializers
 from .models import Puzzle, Category, PuzzleTest, Development, Attempt
 from engine.tasks import test_chain
 import logging
+from django.db.models import Exists, OuterRef
 
 logging.basicConfig(level=logging.INFO)
 
@@ -101,9 +102,49 @@ class AttemptsView(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_201_CREATED)
 
-class CompletedPuzzleView(generics.RetrieveAPIView):
+
+class AttemptedPuzzleView(generics.ListAPIView):
+    """Returns a list of attempted puzzle for the authenticated user.
+    TODO: enhance performance via computed fields in the DB
+    TODO: add a completed field
+    """
     serializer_class = serializers.PuzzleListSerializer
-    authentication_classes = authentication.TokenAuthentication
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = StandardResultsSetPagination
     
     def get_queryset(self):
-        return Puzzle.objects.filter()
+        return Puzzle.objects.filter(
+            Exists(
+                Development.objects.filter(
+                    puzzle=OuterRef('pk'),
+                    user=self.request.user
+                )
+            )
+        )
+    
+
+class CompletedPuzzleView(generics.ListAPIView):
+    """Returns a list of completed puzzle for the authenticated user.
+    TODO: enhance performance via computed fields in the DB
+    """
+    serializer_class = serializers.PuzzleListSerializer
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        return Puzzle.objects.filter(
+            Exists(
+                Development.objects.filter(
+                    Exists(
+                        Attempt.objects.filter(
+                            development=OuterRef('pk'),
+                            passed=True
+                        )
+                    ),
+                    puzzle=OuterRef('pk'),
+                    user=self.request.user
+                )
+            )
+        )
