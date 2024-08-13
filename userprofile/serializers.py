@@ -10,7 +10,7 @@ class UserFullInformationSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", required=False)
     first_name = serializers.CharField(source="user.first_name", required=False)
     last_name = serializers.CharField(source="user.last_name", required=False)
-    picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
+    picture = serializers.ImageField(required=False, allow_null=True, use_url=True, read_only=True)
 
     class Meta:
         model = Profile
@@ -42,6 +42,7 @@ class UserPasswordSerializer(serializers.Serializer):
         model = User
     
 
+#TODO: refactor User with Profile or Userprofile
 class UserInformationSerializer(serializers.ModelSerializer):
     """
     This class provides user information except email.
@@ -54,3 +55,7 @@ class UserInformationSerializer(serializers.ModelSerializer):
         fields = ("username", "github", "linkedin", "picture")
 
 
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("picture",)

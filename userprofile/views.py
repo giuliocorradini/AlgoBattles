@@ -4,7 +4,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
-from .serializers import UserFullInformationSerializer, UserInformationSerializer, UserPasswordSerializer
+from rest_framework.parsers import MultiPartParser, FileUploadParser
+from .serializers import UserFullInformationSerializer, UserInformationSerializer, UserPasswordSerializer, ProfilePictureSerializer
 from .models import Profile
 
 
@@ -74,3 +75,14 @@ class UserInformationView(RetrieveAPIView):
     def get_object(self):
         return Profile.objects.get(user__id=self.kwargs['userid'])
     
+
+class ProfilePictureView(UpdateAPIView):
+    serializer_class = ProfilePictureSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsBrowserAuthenticated]
+    parser_classes = [MultiPartParser, FileUploadParser]
+
+    #TODO: limit size
+
+    def get_object(self):
+        return self.request.user
