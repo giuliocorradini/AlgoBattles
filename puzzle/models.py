@@ -48,6 +48,8 @@ class Development(models.Model):
         constraints.UniqueConstraint(puzzle, user, name="unique_puzzle_development_per_user")
     ]
 
+    completed = models.BooleanField(default=False)
+
 class Attempt(models.Model):
     """An attempt of solving the puzzle. Triggers a build and a test in the solver facility"""
 
