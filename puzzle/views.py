@@ -1,6 +1,7 @@
 from rest_framework import generics, pagination, views, status, authentication, viewsets, permissions
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from . import serializers
 from .models import Puzzle, Category, PuzzleTest, Development, Attempt
 from engine.tasks import test_chain
@@ -98,11 +99,29 @@ class AttemptsView(viewsets.ModelViewSet):
 
         print(tests)
 
-        task_id = test_chain(request.data.get("language"), request.data.get("source"), uid, tests)
-        a.task_id = task_id
+        task_result = test_chain(request.data.get("language"), request.data.get("source"), uid, tests)
+        a.task_id = task_result.id
         a.save()
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response({"id": task_result.id}, status=status.HTTP_201_CREATED)
+    
+
+class PollingAttemptResultView(generics.RetrieveAPIView):
+    """Gets the result of a build-test chain with polling"""
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsBrowserAuthenticated,)
+    serializer_class = serializers.AttemptListSerializer
+
+    def get_object(self):
+        try:
+            tid = int(self.kwargs['tid'])
+        except ValueError:
+            return None
+
+        return Attempt.objects.get(
+            task_id=tid,
+            development__user=self.request.user
+        )
 
 
 class AttemptedPuzzleView(generics.ListAPIView):

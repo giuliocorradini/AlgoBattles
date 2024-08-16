@@ -1,5 +1,8 @@
 from celery import shared_task
 from celery.exceptions import Ignore
+from celery.signals import task_postrun
+from django.db import transaction
+from puzzle.models import Attempt
 from .engine import Engine, CompileTimeError
 
 engine = Engine()
@@ -25,3 +28,17 @@ def test_chain(language, source, uid, tests):
 
     chain = build.si(language, source, uid) | test.s(uid, tests)
     return chain.apply_async()
+
+@task_postrun.connect
+def update_task_status(sender, task_id, task, args, kwargs, retval, state, **extra):
+    if task == test and state == "SUCCESS":
+        with transaction.atomic():
+            att = Attempt.objects.filter(task_id=task_id).first()
+            if not att:
+                return
+
+            status, data = retval
+            if status == "solver_success":
+                att.passed = True
+
+            att.save()
