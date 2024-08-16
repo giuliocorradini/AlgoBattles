@@ -1,11 +1,16 @@
-from celery import shared_task, chain
-from .engine import Engine
+from celery import shared_task
+from celery.exceptions import Ignore
+from .engine import Engine, CompileTimeError
 
 engine = Engine()
 
-@shared_task
-def build(language, source, uid):
-    return engine.compile(language, source, uid)
+@shared_task(bind=True)
+def build(self, language, source, uid):
+    try:
+        return engine.compile(language, source, uid)
+    except CompileTimeError as e:
+        self.update_state(state="FAILURE", meta=e.logs)
+        raise Ignore()
 
 @shared_task
 def test(chunk, uid, tests):
@@ -18,5 +23,5 @@ def test_chain(language, source, uid, tests):
     Returns the chain task ID. Can be used to retrieve the task result later on.
     """
 
-    res = build.apply_async((language, source, uid), link=test.s(uid, tests))
-    return res.id
+    chain = build.si(language, source, uid) | test.s(uid, tests)
+    return chain.apply_async()

@@ -16,6 +16,11 @@ import docker.models.containers
 
 from .language import C, Cpp
 
+class CompileTimeError(Exception):
+    def __init__(self, logs):
+        super().__init__(logs)
+        self.logs = logs
+
 class Chunk():
     def __init__(self, uid, workingdir):
         relative = os.path.join(workingdir, uid)
@@ -62,11 +67,13 @@ class Engine():
         source = base64.b64decode(source).decode("utf-8")
         return source, language
 
-    def compile(self, langid, source, uid, *args, **kwargs):
+    def compile(self, langid: str, source: str, uid: str, *args, **kwargs):
         """Compile a source. Create container, and start compile process."""
         chunk = Chunk(uid, self.workingdir)
         source, language = self._check_source(langid, source, uid)
         self._save_source(chunk, source, language)
+
+        errors = None
 
         worker = language.get_compiler(self.client, chunk.absdir)
         if not worker:
@@ -76,11 +83,9 @@ class Engine():
             worker.start()
             exit = worker.wait()
             logging.debug(f"Completed")
-            if exit["StatusCode"] == 0:
-                self.signal("build", uid, chunk=chunk, status="success")
-            else:
-                logs = worker.logs(stdout=False, stderr=True).decode('utf-8')
-                self.signal("build", uid, chunk=chunk, status="fail", errors=logs)
+
+            if exit["StatusCode"] != 0:
+                errors = worker.logs(stdout=False, stderr=True).decode('utf-8')
 
         except Exception as e:
             print(e)
@@ -88,7 +93,11 @@ class Engine():
         finally:
             worker.remove()
         
-        return chunk.absdir
+        if errors is None:
+            return chunk.absdir
+        
+        else:
+            raise CompileTimeError(errors)
     
     def _put_tests_file(self, chunk, tests):
         with open(os.path.join(chunk, "tests.txt"), "w") as fp:
