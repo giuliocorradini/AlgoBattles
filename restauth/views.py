@@ -43,7 +43,7 @@ class RegisterUser(APIView):
             
 
         user = User.objects.create_user(username, email, password)
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_201_CREATED)
     
 
 class Logout(APIView):
@@ -52,7 +52,7 @@ class Logout(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         request.auth.delete()
         logout(request)
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_205_RESET_CONTENT)
