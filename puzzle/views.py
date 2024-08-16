@@ -60,6 +60,7 @@ def public_tests_for_puzzle(request, pk):
 
 class AttemptsView(viewsets.ModelViewSet):
     authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.AttemptListSerializer
 
     def _corresponding_development(self, user, puzzle_id) -> Development:
