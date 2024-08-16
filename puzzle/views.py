@@ -6,6 +6,7 @@ from .models import Puzzle, Category, PuzzleTest, Development, Attempt
 from engine.tasks import test_chain
 import logging
 from django.db.models import Exists, OuterRef
+from utils.permissions import IsBrowserAuthenticated
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,7 +61,7 @@ def public_tests_for_puzzle(request, pk):
 
 class AttemptsView(viewsets.ModelViewSet):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (IsBrowserAuthenticated, )
     serializer_class = serializers.AttemptListSerializer
 
     def _corresponding_development(self, user, puzzle_id) -> Development:
