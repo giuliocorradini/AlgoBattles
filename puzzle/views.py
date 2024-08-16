@@ -104,10 +104,8 @@ class AttemptsView(viewsets.ModelViewSet):
 
 
 class AttemptedPuzzleView(generics.ListAPIView):
-    """Returns a list of attempted puzzle for the authenticated user.
-    TODO: enhance performance via computed fields in the DB
-    TODO: add a completed field
-    """
+    """Returns a list of attempted puzzle for the authenticated user."""
+
     serializer_class = serializers.PuzzleListSerializer
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -125,9 +123,8 @@ class AttemptedPuzzleView(generics.ListAPIView):
     
 
 class CompletedPuzzleView(generics.ListAPIView):
-    """Returns a list of completed puzzle for the authenticated user.
-    TODO: enhance performance via computed fields in the DB
-    """
+    """Returns a list of completed puzzle for the authenticated user."""
+
     serializer_class = serializers.PuzzleListSerializer
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -137,14 +134,9 @@ class CompletedPuzzleView(generics.ListAPIView):
         return Puzzle.objects.filter(
             Exists(
                 Development.objects.filter(
-                    Exists(
-                        Attempt.objects.filter(
-                            development=OuterRef('pk'),
-                            passed=True
-                        )
-                    ),
                     puzzle=OuterRef('pk'),
-                    user=self.request.user
+                    user=self.request.user,
+                    completed=True
                 )
             )
         )
