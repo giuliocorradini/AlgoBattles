@@ -2,6 +2,7 @@ from celery import shared_task
 from celery.exceptions import Ignore
 from celery.signals import task_postrun
 from django.db import transaction
+from django_celery_results.models import TaskResult
 from puzzle.models import Attempt
 from .engine import Engine, CompileTimeError
 
@@ -31,6 +32,21 @@ def test_chain(language, source, uid, tests):
 
 @task_postrun.connect
 def update_task_status(sender, task_id, task, args, kwargs, retval, state, **extra):
+    if task == build and state == "IGNORED":
+        uid = args[2]
+        
+        att = Attempt.objects.filter(pk=uid).first()
+        if not att:
+            return
+        
+        task_res = TaskResult.objects.filter(task_id=task_id).first()
+        if not task_res:
+            return
+        
+        with transaction.atomic():
+            att.results = task_res.result
+            att.save()
+
     if task == test and state == "SUCCESS":
         with transaction.atomic():
             att = Attempt.objects.filter(task_id=task_id).first()

@@ -103,7 +103,7 @@ class AttemptsView(viewsets.ModelViewSet):
         a.task_id = task_result.id
         a.save()
 
-        return Response({"id": task_result.id}, status=status.HTTP_201_CREATED)
+        return Response({"id": a.pk}, status=status.HTTP_201_CREATED)
     
 
 class PollingAttemptResultView(generics.RetrieveAPIView):
@@ -119,7 +119,7 @@ class PollingAttemptResultView(generics.RetrieveAPIView):
             return None
 
         return Attempt.objects.get(
-            task_id=tid,
+            pk=tid,
             development__user=self.request.user
         )
 
