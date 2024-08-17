@@ -5,6 +5,7 @@ from django.db import transaction
 from django_celery_results.models import TaskResult
 from puzzle.models import Attempt
 from .engine import Engine, CompileTimeError
+import json
 
 engine = Engine()
 
@@ -54,8 +55,9 @@ def update_task_status(sender, task_id, task, args, kwargs, retval, state, **ext
                 return
 
             status, data = retval
+            results = json.loads(data)
             if status == "solver_success":
-                att.passed = True
+                att.passed = all(map(lambda x: x == "passed", results.items()))
             
             att.results = data
             att.save()

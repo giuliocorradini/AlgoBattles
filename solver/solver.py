@@ -36,7 +36,7 @@ def main(timeout) -> int:
             except TimeoutError as te:
                 logging.info(f"Signal timeout error for test case {i}")
 
-    print(json.dumps(results)) 
+    print(json.dumps(results))
 
 if __name__ == "__main__":
     main(int(sys.argv[1]))
