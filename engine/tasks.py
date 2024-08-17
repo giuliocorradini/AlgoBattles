@@ -56,5 +56,6 @@ def update_task_status(sender, task_id, task, args, kwargs, retval, state, **ext
             status, data = retval
             if status == "solver_success":
                 att.passed = True
-
+            
+            att.results = data
             att.save()
