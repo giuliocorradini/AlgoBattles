@@ -58,7 +58,7 @@ def update_task_status(sender, task_id, task, args, kwargs, retval, state, **ext
             status, data = retval
             results = json.loads(data)
             if status == "solver_success":
-                att.passed = all(map(lambda x: x == "passed", results.items()))
+                att.passed = all(map(lambda x: x == "passed", results.values()))
             
             att.results = data
             att.save()
