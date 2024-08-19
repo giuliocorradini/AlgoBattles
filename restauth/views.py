@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from django.db.models import Q
+from utils.permissions import IsBrowserAuthenticated
 
 
 class RegisterUser(APIView):
@@ -56,3 +57,13 @@ class Logout(APIView):
         request.auth.delete()
         logout(request)
         return Response(status=status.HTTP_205_RESET_CONTENT)
+    
+
+class ValidateTokenView(APIView):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsBrowserAuthenticated,)
+
+    def post(self, request):
+        """Returns 204 if the authorization token is valid. Else 401 unauthorized"""
+
+        return Response(status.HTTP_204_NO_CONTENT)
