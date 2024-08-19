@@ -54,7 +54,8 @@ class Attempt(models.Model):
     """An attempt of solving the puzzle. Triggers a build and a test in the solver facility"""
 
     development = models.ForeignKey(Development, on_delete=models.CASCADE)
-    passed = models.BooleanField()
+    passed = models.BooleanField(default=False)
+    build_error = models.BooleanField(default=False)
     results = models.TextField()    # Test results JSON-encoded
     on_date = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=255)
