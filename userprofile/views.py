@@ -57,6 +57,11 @@ class PasswordUpdateView(UpdateAPIView):
                 return Response({
                     "reason": "Wrong password"
                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if new_pwd == old_pwd:
+                return Response({
+                    "reason": "Same password"
+                }, status=status.HTTP_409_CONFLICT)
 
             self.object.set_password(new_pwd)
             self.object.save()
