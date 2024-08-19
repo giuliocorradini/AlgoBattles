@@ -45,7 +45,7 @@ def update_task_status(sender, task_id, task, args, kwargs, retval, state, **ext
             return
         
         with transaction.atomic():
-            att.results = task_res.result
+            att.results = json.loads(task_res.result)
             att.save()
 
     if task == test and state == "SUCCESS":
