@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # https://dj-rest-auth.readthedocs.io/en/latest/installation.html
 
 INSTALLED_APPS = [
+    'daphne',
     'puzzle.apps.PuzzleConfig',
     'restauth.apps.RestAuthConfig',
     'engine.apps.EngineConfig',
@@ -78,6 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'AlgoBattles.wsgi.application'
+ASGI_APPLICATION = "AlgoBattles.asgi.application"
 
 
 # Database
