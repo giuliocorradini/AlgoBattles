@@ -9,6 +9,8 @@ import logging
 from django.db.models import Exists, OuterRef
 from utils.permissions import IsBrowserAuthenticated
 
+MAX_FEATURED = 10   #TODO: move to settings.py
+
 logging.basicConfig(level=logging.INFO)
 
 class CategoryList(views.APIView):
@@ -57,6 +59,25 @@ class PuzzleView(generics.RetrieveAPIView):
             return Puzzle.objects.none
 
         return Puzzle.objects.filter(pk=pk)
+    
+
+class FeaturedPuzzleView(views.APIView):
+    def get(self, request, format=None):
+        serializer_class = serializers.PuzzleListSerializer
+
+        featured_cats = Category.objects.filter(featured=True)
+        puzzles = [
+            Puzzle.objects.filter(categories=fcat)[:MAX_FEATURED] for fcat in featured_cats
+        ]
+
+        data = [
+            {
+                "name": fcat.name,
+                "puzzles": serializer_class(p, many=True).data
+            } for fcat, p in zip(featured_cats, puzzles)
+        ]
+
+        return Response(data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
 def public_tests_for_puzzle(request, pk):
