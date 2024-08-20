@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    featured = models.BooleanField(default=False)
 
 
 class Puzzle(models.Model):

@@ -13,9 +13,14 @@ logging.basicConfig(level=logging.INFO)
 
 class CategoryList(views.APIView):
     def get(self, request):
-        categories = Category.objects.values_list('name', flat=True)
-        return Response(list(categories))
+        featured = request.query_params.get("featured")
+        if featured == "1":
+            categories = Category.objects.filter(featured=True)
 
+        else:
+            categories = Category.objects.all()
+
+        return Response(list(categories.values_list('name', flat=True)))
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 100
