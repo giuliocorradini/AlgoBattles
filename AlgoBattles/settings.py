@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'puzzle.apps.PuzzleConfig',
     'restauth.apps.RestAuthConfig',
     'engine.apps.EngineConfig',
+    'multiplayer.apps.MultiplayerConfig',
     'userprofile.apps.UserprofileConfig',
     'django.contrib.admin',
     'django.contrib.auth',
