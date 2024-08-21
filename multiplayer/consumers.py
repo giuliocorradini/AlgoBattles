@@ -34,12 +34,26 @@ class MultiplayerConsumer(AsyncJsonWebsocketConsumer):
         else:
             await Presence.objects.acreate(user=user, channel_name=channel_name)
 
-    async def receive_json(self, content):
-        await self.send_json({
-            "message": content.get("message")
-        })
-
     async def lobby_update(self, event):
         await self.send_json({
             "members": event.get("members")
         })
+
+    async def challenge_request(self, event):
+        """Receive challenge from other users on Channel"""
+
+        await self.send_json(event)
+
+    async def receive_json(self, content):
+        if "challenge" in content:
+            # route challenge to appropriate recipient
+            rival_id = content.get("challenge").get("to")
+            rival = await Presence.objects.filter(user_id=rival_id).aget()
+
+            await self.channel_layer.send(rival.channel_name, {
+                "type": "challenge.request",
+                "challenge": {
+                    "from": self.user.id
+                }
+            })
+        
