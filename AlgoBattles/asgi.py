@@ -14,6 +14,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from multiplayer.routing import websocket_urlpatterns
+from multiplayer.middleware import TokenAuthMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AlgoBattles.settings')
 # Initialize Django ASGI application early to ensure the AppRegistry
@@ -24,7 +25,7 @@ application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
+            TokenAuthMiddleware(URLRouter(websocket_urlpatterns))
         ),
     }
 )
