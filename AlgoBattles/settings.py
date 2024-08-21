@@ -150,3 +150,11 @@ REST_FRAMEWORK = {
 # Celery
 
 CELERY_RESULT_BACKEND = "django-db"
+
+# Django Channels 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
