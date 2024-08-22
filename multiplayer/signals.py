@@ -48,7 +48,11 @@ def reject_c(c):
 
 @receiver(post_save, sender=Challenge)
 def reject_others(sender, instance, **kwargs):
-    if instance.state == Challenge.State.ACCEPTED:
+    update_fields = kwargs.get("update_fields")
+    if not update_fields:
+        update_fields = []
+        
+    if "state" in update_fields and instance.state == Challenge.State.ACCEPTED:
         with atomic():
             starter_challenges = Challenge.objects.filter(~Q(id=instance.id) & (Q(starter_id=instance.starter_id) | Q(receiver_id=instance.starter_id)))
             receiver_challenges = Challenge.objects.filter(~Q(id=instance.id) & (Q(starter_id=instance.receiver_id) | Q(receiver_id=instance.receiver_id)))

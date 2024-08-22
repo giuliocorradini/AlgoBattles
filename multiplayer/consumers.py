@@ -1,5 +1,6 @@
 from channels.generic.websocket import JsonWebsocketConsumer
 from .models import Presence, Challenge
+from puzzle.models import Puzzle
 from asgiref.sync import async_to_sync
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
@@ -54,6 +55,8 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
         print(f"Opponent accepted challenge {event}")
 
+        self.challenge = Challenge.objects.get(id=event.get("id"))
+
         self.send_json({
             "accept": {
                 "challenge": {
@@ -70,6 +73,9 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 }
             }
         })
+
+    def challenge_setpuzzle(self, event):
+        self.send_json(event.get("message"))
 
     def receive_json(self, content):
         """Process actions from the connected client"""
@@ -112,7 +118,9 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             challenge = challenge.get()
 
             challenge.state = challenge.State.ACCEPTED
-            challenge.save()
+            challenge.save(update_fields=["state"])
+
+            self.challenge = challenge
 
             async_to_sync(self.channel_layer.send)(challenge.starter.channel_name, {
                 "type": "challenge.accept",
@@ -139,3 +147,20 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 "type": "challenge.decline",
                 "id": challenge.id
             })
+
+        if "puzzle" in content:
+            puzzle_id = content.get("puzzle").get("set").get("id")
+
+            if self.challenge.starter == self.presence:
+                self.challenge.puzzle = Puzzle.objects.get(id=puzzle_id)
+                self.challenge.save()
+
+            async_to_sync(self.channel_layer.send)(self.challenge.receiver.channel_name, {
+                "type": "challenge.setpuzzle",
+                "message": {
+                    "puzzle": {
+                        "id": puzzle_id
+                    }
+                }
+            })
+            
