@@ -92,7 +92,7 @@ class AttemptsView(viewsets.ModelViewSet):
     serializer_class = serializers.AttemptListSerializer
 
     def _corresponding_development(self, user, puzzle_id) -> Development:
-        obj, created = Development.objects.get_or_create(user=user, puzzle_id=puzzle_id)
+        obj, created = Development.objects.get_or_create(user=user, puzzle_id=puzzle_id, challenge=None)
         return obj
     
     @action(detail=True, methods=["get"])
@@ -131,6 +131,13 @@ class AttemptsView(viewsets.ModelViewSet):
 
         return Response({"id": a.pk}, status=status.HTTP_201_CREATED)
     
+
+class MultiplayerAttemptsView(AttemptsView):
+    def _corresponding_development(self, user, puzzle_id) -> Development:
+        cid = self.request.query_params.get("chal")
+        obj, _ = Development.objects.get_or_create(user=user, puzzle_id=puzzle_id, challenge_id=cid)
+        return obj
+
 
 class PollingAttemptResultView(generics.RetrieveAPIView):
     """Gets the result of a build-test chain with polling"""

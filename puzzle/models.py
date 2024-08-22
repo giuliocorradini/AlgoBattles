@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import constraints
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from multiplayer.models import Challenge
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -50,6 +51,8 @@ class Development(models.Model):
     ]
 
     completed = models.BooleanField(default=False)
+
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, default=None, null=True)
 
 class Attempt(models.Model):
     """An attempt of solving the puzzle. Triggers a build and a test in the solver facility"""

@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from puzzle.models import Puzzle
 
 class Presence(models.Model):
     """
@@ -30,7 +29,7 @@ class Challenge(models.Model):
         default=State.WAITING
     )
 
-    puzzle = models.OneToOneField(Puzzle, on_delete=models.SET_NULL, null=True)
+    puzzle = models.OneToOneField('puzzle.Puzzle', on_delete=models.SET_NULL, null=True)
 
     class Meta:
         unique_together = ('starter', 'receiver')
