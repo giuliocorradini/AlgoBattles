@@ -3,24 +3,25 @@ from .models import Presence, Challenge
 from asgiref.sync import async_to_sync
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
-     def connect(self):
+    def connect(self):
         self.user = self.scope['user']
         if self.user.is_anonymous:
              self.close(3000, "Invalid token")
         
         self.accept()
-    
-        async_to_sync(self.channel_layer.group_add)("lobby", self.channel_name)
-        self.add_presence(self.user, self.channel_name)
 
-     def disconnect(self, close_code):
+    def disconnect(self, close_code):
         if not self.user.is_anonymous:
             self.remove_presence(self.user)
         
-     def remove_presence(self, user):
+    def enter_lobby(self):
+        async_to_sync(self.channel_layer.group_add)("lobby", self.channel_name)
+        self.add_presence(self.user, self.channel_name)
+
+    def remove_presence(self, user):
         Presence.objects.filter(user=user).delete()
 
-     def add_presence(self, user, channel_name):
+    def add_presence(self, user, channel_name):
         if user.is_anonymous:
             return
 
@@ -30,12 +31,12 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
         self.presence = p
 
-     def lobby_update(self, event):
+    def lobby_update(self, event):
         self.send_json({
             "members": event.get("members")
         })
 
-     def challenge_request(self, event):
+    def challenge_request(self, event):
         """Receive challenge from other users on Channel"""
         challenge_id = event.get("challenge").get("id")
         c =  Challenge.objects.filter(id=challenge_id).get()
@@ -48,7 +49,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             }
         })
 
-     def challenge_accept(self, event):
+    def challenge_accept(self, event):
         """The opponent has accepted the challenge, send response"""
 
         print(f"Opponent accepted challenge {event}")
@@ -61,7 +62,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             }
         })
 
-     def challenge_decline(self, event):
+    def challenge_decline(self, event):
         self.send_json({
             "decline": {
                 "challenge": {
@@ -70,8 +71,11 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             }
         })
 
-     def receive_json(self, content):
+    def receive_json(self, content):
         """Process actions from the connected client"""
+
+        if "enter" in content:
+            self.enter_lobby()
 
         if "challenge" in content:
 
