@@ -2,14 +2,19 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from .models import Presence, Challenge
 from puzzle.models import Puzzle
 from asgiref.sync import async_to_sync
+from .auth import get_user
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
     def connect(self):
-        self.user = self.scope['user']
-        if self.user.is_anonymous:
-             self.close(3000, "Invalid token")
-        
         self.accept()
+
+    def authenticate(self, token):
+        self.user = get_user(token)
+        
+        if self.user.is_anonymous:
+            self.close(3000, "Invalid token")
+        
+        self.auth = True
 
     def disconnect(self, close_code):
         if not self.user.is_anonymous:
@@ -80,10 +85,20 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
     def receive_json(self, content):
         """Process actions from the connected client"""
 
+        print(content)
+
+        if "authenticate" in content:
+            token = content.get("authenticate").get("token")
+            self.authenticate(token)
+
+        if not self.auth:
+            self.close()
+            return
+
         if "enter" in content:
             self.enter_lobby()
 
-        if "challenge" in content:
+        elif "challenge" in content:
 
             # route challenge to appropriate recipient
             rival_id = content.get("challenge").get("to")
@@ -104,9 +119,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 }
             })
 
-        print(content)
-
-        if "accept" in content:
+        elif "accept" in content:
 
             challenge_id = content.get("accept").get("challenge").get("id")
             challenge = Challenge.objects.filter(id=challenge_id, receiver_id=self.presence.id)
@@ -127,7 +140,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 "id": challenge.id
             })
 
-        if "decline" in content:
+        elif "decline" in content:
 
             challenge_id = content.get("decline").get("challenge").get("id")
             challenge = Challenge.objects.filter(id=challenge_id, receiver_id=self.presence.id)
@@ -148,7 +161,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 "id": challenge.id
             })
 
-        if "puzzle" in content:
+        elif "puzzle" in content:
             puzzle_id = content.get("puzzle").get("set").get("id")
 
             if self.challenge.starter == self.presence:
