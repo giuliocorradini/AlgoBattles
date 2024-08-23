@@ -156,6 +156,6 @@ CELERY_RESULT_BACKEND = "django-db"
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+        "BACKEND": "channels_redis.core.RedisChannelLayer"
     }
 }

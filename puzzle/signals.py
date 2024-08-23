@@ -4,6 +4,8 @@ puzzle.signals
 This module provides callbacks for post_save signals to optimize the computation of completed developments for
 a given puzzle and a given user.
 
+TODO: not working
+
 https://docs.djangoproject.com/en/5.0/ref/signals/#post-save
 https://docs.djangoproject.com/en/5.0/topics/signals/
 """

@@ -184,14 +184,14 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
             if self.challenge.starter == self.presence:
                 self.challenge.puzzle = Puzzle.objects.get(id=puzzle_id)
+                self.challenge.state = Challenge.State.ONGOING
                 self.challenge.save()
 
-            async_to_sync(self.channel_layer.send)(self.challenge.receiver.channel_name, {
-                "type": "challenge.setpuzzle",
-                "message": {
-                    "puzzle": {
-                        "id": puzzle_id
+                async_to_sync(self.channel_layer.send)(self.challenge.receiver.channel_name, {
+                    "type": "challenge.setpuzzle",
+                    "message": {
+                        "puzzle": {
+                            "id": puzzle_id
+                        }
                     }
-                }
-            })
-            
+                })

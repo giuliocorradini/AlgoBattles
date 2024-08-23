@@ -79,7 +79,7 @@ def check_passed_attempt_for_challenge(sender, instance: Attempt, **kwargs):
         challenge.winner = instance.development.user
         challenge.save()
 
-        async_to_sync(channel_layer.send)(challenge.sender.channel_name, {
+        async_to_sync(channel_layer.send)(challenge.starter.channel_name, {
             "type": "declare.winner",
             "winner": instance.development.user.id
         })
