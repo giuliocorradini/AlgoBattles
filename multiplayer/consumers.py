@@ -50,8 +50,11 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         # Update client
         self.send_json({
             "challenge": {
-                "from": c.starter.id,
-                "id": c.id
+                "id": c.id,
+                "from": {
+                    "id": c.starter.user.id,
+                    "username": c.starter.user.username
+                }
             }
         })
 
@@ -66,6 +69,10 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             "accept": {
                 "challenge": {
                     "id": event.get("id")
+                },
+                "opponent": {
+                    "id": self.challenge.receiver.user.id,
+                    "username": self.challenge.receiver.user.username,
                 }
             }
         })
