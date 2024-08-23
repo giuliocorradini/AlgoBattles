@@ -20,7 +20,7 @@ class Challenge(models.Model):
         WAITING = 1, _("Waiting")
         REJECTED = 2, _("Rejected")
         ACCEPTED = 3, _("Accepted")
-        PUZZLE_SELECTED = 4, _("Puzzle selected")
+        ONGOING = 4, _("Ongoing")
         COMPLETED = 5, _("Completed")
         TIMES_UP = 6, _("Time's up")
 
@@ -30,6 +30,8 @@ class Challenge(models.Model):
     )
 
     puzzle = models.OneToOneField('puzzle.Puzzle', on_delete=models.SET_NULL, null=True)
+
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, default=None)
 
     class Meta:
         unique_together = ('starter', 'receiver')

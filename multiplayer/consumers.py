@@ -17,7 +17,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         self.auth = True
 
     def disconnect(self, close_code):
-        if not self.user.is_anonymous:
+        if self.user and not self.user.is_anonymous:
             self.remove_presence(self.user)
         
     def enter_lobby(self):
@@ -88,6 +88,17 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
     def challenge_setpuzzle(self, event):
         self.send_json(event.get("message"))
+
+    def declare_winner(self, event):
+        """Receive channel message from database hook signal (check_passed_attempt_for_challenge)
+        And terminate the challenge telling participants who wins.
+        """
+
+        self.send_json({
+            "stop": {
+                "result": ("winner" if event.get("winner") == self.user.id else "loser")
+            }
+        })
 
     def receive_json(self, content):
         """Process actions from the connected client"""

@@ -7,6 +7,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from .models import Presence, Challenge, User
 from userprofile.serializers import UserPublicInformationSerializer
+from puzzle.models import Attempt
 
 channel_layer = get_channel_layer()
 serializer = UserPublicInformationSerializer
@@ -62,3 +63,28 @@ def reject_others(sender, instance, **kwargs):
 
             for c in receiver_challenges:
                 reject_c(c)
+
+@receiver(post_save, sender=Attempt)
+def check_passed_attempt_for_challenge(sender, instance: Attempt, **kwargs):
+    print("responding to attempt post save")
+    if not instance.passed:
+        return
+    
+    print(instance)
+    
+    challenge = instance.development.challenge
+
+    if challenge and challenge.state == Challenge.State.ONGOING:
+        challenge.state = Challenge.State.COMPLETED
+        challenge.winner = instance.development.user
+        challenge.save()
+
+        async_to_sync(channel_layer.send)(challenge.sender.channel_name, {
+            "type": "declare.winner",
+            "winner": instance.development.user.id
+        })
+
+        async_to_sync(channel_layer.send)(challenge.receiver.channel_name, {
+            "type": "declare.winner",
+            "winner": instance.development.user.id
+        })
