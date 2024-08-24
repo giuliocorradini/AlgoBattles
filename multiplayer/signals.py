@@ -5,12 +5,13 @@ from django.db.transaction import atomic
 from django.db.models import Q
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from .models import Presence, Challenge, User
-from userprofile.serializers import UserPublicInformationSerializer
+from .models import Presence, Challenge
+from userprofile.models import Profile
+from .serializers import UserLobbySerializer
 from puzzle.models import Attempt
 
 channel_layer = get_channel_layer()
-serializer = UserPublicInformationSerializer
+serializer = UserLobbySerializer
 
 @receiver(post_save, sender=Presence)
 @receiver(post_delete, sender=Presence)
@@ -20,9 +21,9 @@ def broadcast_presence(sender, instance, **kwargs):
     Broadcast the new list of present users to the room.
     """
 
-    users = User.objects.filter(
+    users = Profile.objects.filter(
         Exists(
-            Presence.objects.filter(user=OuterRef('pk'))
+            Presence.objects.filter(user=OuterRef('user'))
         )
     )
     

@@ -119,8 +119,24 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         elif "challenge" in content:
 
             # route challenge to appropriate recipient
-            rival_id = content.get("challenge").get("to")
-            rival =  Presence.objects.filter(user_id=rival_id).get()
+            try:
+                rival_id = int(content.get("challenge").get("to"))
+            except ValueError:
+                self.close(1002, "Invalid rival ID")
+
+            if rival_id == self.user.id:
+                self.send_json({
+                    "error": "You can't challenge yourself"
+                })
+                return
+
+            rival = Presence.objects.filter(user_id=rival_id).get()
+
+            if not rival:
+                self.send_json({
+                    "error": "Invalid rival ID"
+                })
+                return
 
             if  Challenge.objects.filter(starter=self.presence, receiver=rival).exists():
                 self.send_json({
