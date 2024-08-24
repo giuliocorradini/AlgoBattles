@@ -6,6 +6,7 @@ from .auth import get_user
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
     def connect(self):
+        self.user = None
         self.accept()
 
     def authenticate(self, token):
