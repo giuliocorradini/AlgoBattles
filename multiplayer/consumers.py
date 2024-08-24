@@ -3,6 +3,7 @@ from .models import Presence, Challenge
 from puzzle.models import Puzzle
 from asgiref.sync import async_to_sync
 from .auth import get_user
+from .serializers import ChallengeSerializer
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
     def connect(self):
@@ -44,18 +45,25 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         })
 
     def challenge_request(self, event):
-        """Receive challenge from other users on Channel"""
+        """Handle a new challenge from other users on Channel.
+        Sends all challenges in WAITING state
+        """
         challenge_id = event.get("challenge").get("id")
         c =  Challenge.objects.filter(id=challenge_id).get()
+
+        my_open_challenges = Challenge.objects.filter(receiver=self.presence, state=Challenge.State.WAITING)
 
         # Update client
         self.send_json({
             "challenge": {
-                "id": c.id,
-                "from": {
-                    "id": c.starter.user.id,
-                    "username": c.starter.user.username
-                }
+                "last": {
+                    "id": c.id,
+                    "from": {
+                        "id": c.starter.user.id,
+                        "username": c.starter.user.username
+                    }
+                },
+                "all": ChallengeSerializer(my_open_challenges, many=True).data
             }
         })
 
@@ -141,7 +149,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
             if  Challenge.objects.filter(starter=self.presence, receiver=rival).exists():
                 self.send_json({
-                    "error": "A challenge for this user is already created."
+                    "error": "A challenge for this user was already sent."
                 })
                 return
 
