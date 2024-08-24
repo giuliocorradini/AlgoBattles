@@ -4,6 +4,7 @@ from puzzle.models import Puzzle
 from asgiref.sync import async_to_sync
 from .auth import get_user
 from .serializers import ChallengeSerializer
+from django.db.models import Q
 
 class MultiplayerConsumer(JsonWebsocketConsumer):
     def connect(self):
@@ -127,6 +128,11 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
         elif "challenge" in content:
 
+            if Challenge.objects.filter((Q(state=Challenge.State.ACCEPTED) | Q(state=Challenge.State.ONGOING)) & (Q(starter_id=self.presence.id) | Q(receiver_id=self.presence.id))).exists():
+                self.send_json({
+                    "error": "Your already started a challenge."
+                })
+
             # route challenge to appropriate recipient
             try:
                 rival_id = int(content.get("challenge").get("to"))
@@ -147,7 +153,7 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 })
                 return
 
-            if  Challenge.objects.filter(starter=self.presence, receiver=rival).exists():
+            if  Challenge.objects.filter(starter=self.presence, receiver=rival, state=Challenge.State.WAITING).exists():
                 self.send_json({
                     "error": "A challenge for this user was already sent."
                 })

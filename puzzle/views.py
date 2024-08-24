@@ -117,7 +117,7 @@ class AttemptsView(viewsets.ModelViewSet):
         dev = self._corresponding_development(request.user, pk)
 
         if dev.challenge and dev.challenge.state != dev.challenge.State.ONGOING:
-            return Response({"reason": "The challenge is finished. You can't submit any more attempts."})
+            return Response({"reason": "The challenge is finished. You can't submit any more attempts."}, status=status.HTTP_400_BAD_REQUEST)
 
         a = Attempt.objects.create(development=dev, passed=False, results="")
         uid = str(a.pk)
