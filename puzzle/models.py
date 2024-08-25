@@ -3,6 +3,8 @@ from django.db.models import constraints
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from multiplayer.models import Challenge
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -29,6 +31,10 @@ class Puzzle(models.Model):
     memory_constraint = models.IntegerField()
 
     categories = models.ManyToManyField(Category)
+
+    search_vector = SearchVectorField(null=True)
+    class Meta:
+        indexes = [GinIndex(fields=['search_vector'])]
 
 
 class PuzzleTest(models.Model):

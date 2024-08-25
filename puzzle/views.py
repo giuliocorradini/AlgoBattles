@@ -8,6 +8,8 @@ from engine.tasks import test_chain
 import logging
 from django.db.models import Exists, OuterRef
 from utils.permissions import IsBrowserAuthenticated
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.db.models import F
 
 MAX_FEATURED = 10   #TODO: move to settings.py
 
@@ -197,3 +199,23 @@ class CompletedPuzzleView(generics.ListAPIView):
                 )
             )
         )
+
+
+class SearchPuzzleView(generics.ListAPIView):
+    """Full text search on puzzle description.
+    TODO: set ranking on results
+    """
+    serializer_class = serializers.PuzzleListSerializer
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        search_query = self.request.query_params.get('t', None)
+        queryset = Puzzle.objects.all()
+
+        if search_query:
+            query = SearchQuery(search_query)
+            queryset = queryset.annotate(rank=SearchRank(F('search_vector'), query)).order_by('-rank')
+        else:
+            queryset = Puzzle.objects.none()
+
+        return queryset
