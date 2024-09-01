@@ -161,10 +161,8 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
             challenge, created = Challenge.objects.get_or_create(starter=self.presence, receiver=rival)
             if not created:
-                #TODO: quick fix for subsequent challenge requests on the same Presence pair
                 challenge.delete()
-
-            challenge = Challenge.objects.create(starter=self.presence, receiver=rival)
+                challenge = Challenge.objects.create(starter=self.presence, receiver=rival)
 
             async_to_sync(self.channel_layer.send)(rival.channel_name, {
                 "type": "challenge.request",
