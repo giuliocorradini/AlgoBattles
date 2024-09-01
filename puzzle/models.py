@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from multiplayer.models import Challenge
 from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -32,7 +32,13 @@ class Puzzle(models.Model):
 
     categories = models.ManyToManyField(Category)
 
-    search_vector = SearchVectorField(null=True)
+    search_vector = models.GeneratedField(
+        db_persist=True,
+        expression=SearchVector(
+            "title", "description", config="english"
+        ),
+        output_field=SearchVectorField(),
+    )
     class Meta:
         indexes = [GinIndex(fields=['search_vector'])]
 
