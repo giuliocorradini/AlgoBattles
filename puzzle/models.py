@@ -42,6 +42,17 @@ class Puzzle(models.Model):
     class Meta:
         indexes = [GinIndex(fields=['search_vector'])]
 
+    class Visibility(models.TextChoices):
+        PUBLIC = "P", _("Public")
+        HIDDEN = "H", _("Hidden")
+        PRIVATE = "R", _("Private")
+
+    visibility = models.CharField(
+        max_length=1,
+        choices=Visibility.choices,
+        default=Visibility.PUBLIC
+    )
+
 
 class PuzzleTest(models.Model):
     input = models.TextField()
