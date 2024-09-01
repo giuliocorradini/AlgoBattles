@@ -13,6 +13,7 @@ docker = "*"
 channels = {extras = ["daphne"], version = "*"}
 channels-redis = "*"
 psycopg2 = "*"
+datasets = "*"
 
 [dev-packages]
 
