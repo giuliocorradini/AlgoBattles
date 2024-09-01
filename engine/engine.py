@@ -6,6 +6,7 @@ This module communicates with Django using a message broker.
 """
 
 import os
+import shutil
 import logging
 import docker
 import base64
@@ -31,6 +32,9 @@ class Chunk():
     @property
     def absdir(self):
         return self.__chunk
+    
+    def remove(self):
+        shutil.rmtree(self.absdir)
 
 class Engine():
     VOLUME_NAME = "algobattles-engine"
@@ -97,6 +101,7 @@ class Engine():
             return chunk.absdir
         
         else:
+            chunk.remove()
             raise CompileTimeError(errors)
     
     def _put_tests_file(self, chunk, tests):
@@ -133,6 +138,7 @@ class Engine():
 
         finally:
             worker.remove()
+            shutil.rmtree(chunk)
 
         return ret
     
