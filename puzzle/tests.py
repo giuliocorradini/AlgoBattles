@@ -20,11 +20,12 @@ class AnonUserCapabilities(TestCase):
             time_constraint = 1,
             memory_constraint = 1,
         )
-        p.categories.add(Category.objects.get(id=2))
+        p.categories.add(Category.objects.get(name="trees"))
         p.save()
 
         self.client = APIClient()
         
+        self.puzzle_id = p.id
 
     # Public website section
     #   Puzzle categories, list, search by category and puzzle detail are part of
@@ -60,13 +61,13 @@ class AnonUserCapabilities(TestCase):
         self.assertEqual(len(response.data.get("results")), 0)
 
     def test_puzzle_details(self):
-        response = self.client.get("/api/puzzle/1")
+        response = self.client.get(f"/api/puzzle/{self.puzzle_id}")
         
         self.assertEqual(response.status_code, 200)
         self.assertTrue("description" in response.data)
 
     def test_puzzle_public_tests(self):
-        response = self.client.get("/api/puzzle/1/test")
+        response = self.client.get(f"/api/puzzle/{self.puzzle_id}/test")
         
         self.assertEqual(response.status_code, 200)
     
@@ -76,12 +77,12 @@ class AnonUserCapabilities(TestCase):
     #   an attempt is also subject to authorization.
 
     def test_get_attempts(self):
-        response = self.client.get("/api/puzzle/1/attempt")
+        response = self.client.get(f"/api/puzzle/{self.puzzle_id}/attempt")
 
         self.assertEqual(response.status_code, 401)
 
     def test_submit_attempt(self):
-        response = self.client.post("/api/puzzle/1/attempt")
+        response = self.client.post(f"/api/puzzle/{self.puzzle_id}/attempt")
 
         self.assertEqual(response.status_code, 401)
 

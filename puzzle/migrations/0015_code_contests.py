@@ -2,7 +2,9 @@
 
 from django.db import migrations
 from datasets import load_dataset
+import sys
 
+isTesting = ("test" in sys.argv)
 
 def load_train_dataset():
     ds = load_dataset("deepmind/code_contests")
@@ -104,4 +106,4 @@ class Migration(migrations.Migration):
             code=import_into_db,
             reverse_code=remove_from_db
         )
-    ]
+    ] if not isTesting else []
