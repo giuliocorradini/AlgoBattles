@@ -53,6 +53,8 @@ class Puzzle(models.Model):
         default=Visibility.PUBLIC
     )
 
+    publisher = models.ForeignKey(User, on_delete=models.SET_DEFAULT, null=True, default=None)
+
 
 class PuzzleTest(models.Model):
     input = models.TextField()
