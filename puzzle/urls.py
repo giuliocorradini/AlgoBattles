@@ -13,4 +13,5 @@ urlpatterns = [
     path("puzzle/attempt_result/<tid>", views.PollingAttemptResultView.as_view(), name="attempt-result-by-id"),
     path("puzzle/attempted/", views.AttemptedPuzzleView.as_view(), name="attempted-list"),
     path("puzzle/completed/", views.CompletedPuzzleView.as_view(), name="completed-list"),
+    path("publisher/", include("puzzle.publisher.urls"))
 ]
