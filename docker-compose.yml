@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  django:
+    image: algobattles:latest
+    container_name: api
+    build: .  # Build image from current directory Dockerfile
+    environment:
+      - DJANGO_SETTINGS_MODULE=AlgoBattles.settings
+      - DATABASE_URL=postgres://postgres:algobattles@db:5432/algobattles
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+
+  db:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: algobattles
+      POSTGRES_DB: algobattles
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+#  nginx:
+#    image: nginx:latest
+#    container_name: nginx
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf  # Assuming you have an nginx.conf file for configuration
+#      - ./static:/usr/share/nginx/html/static  # Replace with your actual static files directory
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - django
+
+volumes:
+  postgres_data:
