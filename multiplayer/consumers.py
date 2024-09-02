@@ -9,6 +9,7 @@ from django.db.models import Q
 class MultiplayerConsumer(JsonWebsocketConsumer):
     def connect(self):
         self.user = None
+        self.challenge = None
         self.accept()
 
     def authenticate(self, token):
@@ -49,6 +50,15 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
             })
 
     def remove_presence(self, user):
+        # Fold open challenge before exiting
+        if self.challenge:
+            opponent = self.challenge.starter if self.challenge.receiver == self.presence else self.challenge.receiver
+
+            async_to_sync(self.channel_layer.send)(opponent.channel_name, {
+                "type": "declare.winner",
+                "winner": opponent.user.id
+            })
+            
         Presence.objects.filter(user=user).delete()
 
     def add_presence(self, user, channel_name):
@@ -130,6 +140,8 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                 "result": ("winner" if event.get("winner") == self.user.id else "loser")
             }
         })
+
+        self.challenge = None
 
     def receive_json(self, content):
         """Process actions from the connected client"""
