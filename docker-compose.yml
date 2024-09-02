@@ -10,6 +10,7 @@ services:
       - DATABASE_URL=postgres://postgres:algobattles@db:5432/algobattles
       - REDIS_URL=redis://redis:6379/0
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - HF_DATASETS_CACHE=/usr/datasets
     ports:
       - "8000:8000"
     depends_on:
@@ -20,6 +21,10 @@ services:
       - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
+      - type: bind  # Use locally available datasets
+        source: ~/.cache/huggingface/datasets
+        target: /usr/datasets
+    command: sh -c "/usr/src/.venv/bin/python -m manage migrate && /usr/src/.venv/bin/python -m manage runserver 0.0.0.0:8000"
 
   db:
     image: postgres:latest
