@@ -27,6 +27,27 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)("lobby", self.channel_name)
         self.add_presence(self.user, self.channel_name)
 
+        p = Challenge.objects.filter(Q(starter=self.presence) | Q(receiver=self.presence), state=Challenge.State.ONGOING)
+
+
+        if p.exists():
+            chal = p.get()
+            opponent = chal.starter if chal.receiver == self.presence else chal.receiver
+            self.send_json({
+                "restore": {
+                    "challenge": {
+                        "id": chal.id
+                    },
+                    "puzzle": {
+                        "id": chal.puzzle.id
+                    },
+                    "opponent": {
+                        "id": opponent.user.id,
+                        "username": opponent.user.username,
+                    }
+                }
+            })
+
     def remove_presence(self, user):
         Presence.objects.filter(user=user).delete()
 
