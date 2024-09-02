@@ -36,6 +36,9 @@ def broadcast_presence(sender, instance, **kwargs):
     }
 
     async_to_sync(channel_layer.group_send)("lobby", channel_layer_message)
+    async_to_sync(channel_layer.group_send)("lobby", {
+        "type": "challenge.update"
+    })
 
 def reject_c(c):
     if c.state != Challenge.State.WAITING:

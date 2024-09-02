@@ -30,7 +30,6 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
 
         p = Challenge.objects.filter(Q(starter=self.presence) | Q(receiver=self.presence), state=Challenge.State.ONGOING)
 
-
         if p.exists():
             chal = p.get()
             opponent = chal.starter if chal.receiver == self.presence else chal.receiver
@@ -48,6 +47,9 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
                     }
                 }
             })
+
+        else:
+            self.challenge_update()
 
     def remove_presence(self, user):
         # Fold open challenge before exiting
@@ -75,6 +77,16 @@ class MultiplayerConsumer(JsonWebsocketConsumer):
         self.send_json({
             "members": event.get("members")
         })
+
+    def challenge_update(self, event=None):
+        my_open_challenges = Challenge.objects.filter(receiver=self.presence, state=Challenge.State.WAITING)
+
+        self.send_json({
+            "challenge": {
+                "all": ChallengeSerializer(my_open_challenges, many=True).data
+            }
+        })
+
 
     def challenge_request(self, event):
         """Handle a new challenge from other users on Channel.
