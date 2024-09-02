@@ -24,7 +24,8 @@ services:
       - type: bind  # Use locally available datasets
         source: ~/.cache/huggingface/datasets
         target: /usr/datasets
-    command: sh -c "/usr/src/.venv/bin/python -m manage migrate && /usr/src/.venv/bin/python -m manage runserver 0.0.0.0:8000"
+      - static_files:/usr/src/staticfiles
+    command: bash -c "/usr/src/.venv/bin/python -m manage migrate && /usr/src/.venv/bin/python -m manage collectstatic <<< yes && /usr/src/.venv/bin/python -m manage runserver 0.0.0.0:8000"
 
   db:
     image: postgres:latest
@@ -53,16 +54,17 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
-#  nginx:
-#    image: nginx:latest
-#    container_name: nginx
-#    volumes:
-#      - ./nginx.conf:/etc/nginx/nginx.conf  # Assuming you have an nginx.conf file for configuration
-#      - ./static:/usr/share/nginx/html/static  # Replace with your actual static files directory
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - django
+  nginx:
+    image: algobattles-nginx:latest
+    container_name: nginx
+    build: ./nginx
+    volumes:
+      - static_files:/usr/share/nginx/html/static
+    ports:
+      - "80:80"
+    depends_on:
+      - django
 
 volumes:
   postgres_data:
+  static_files:
