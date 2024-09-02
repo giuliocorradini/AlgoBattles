@@ -37,6 +37,7 @@ class CreatePuzzleView(generics.CreateAPIView):
     authentication_classes = (TokenAuthentication, )
     permission_classes = (IsBrowserAuthenticated, IsPublisherPermission)
     serializer_class = PuzzleSerializer
+    queryset = Puzzle.objects.all()
 
 
 class PuzzleDetailView(generics.RetrieveUpdateDestroyAPIView):

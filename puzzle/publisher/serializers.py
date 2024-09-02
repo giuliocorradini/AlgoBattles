@@ -14,12 +14,12 @@ class PuzzleListSerializer(serializers.ModelSerializer):
 
 
 class PuzzleSerializer(serializers.ModelSerializer):
-    """Serializes a puzzle for creation and detail view. Categories are treated as a slug
-    field, i.e. dependening on a unique field (called the slug)"""
-    categories = serializers.SlugRelatedField(
-        queryset=models.Category.objects.all(),
-        slug_field='name',
-        many=True
+    """Serializes a puzzle for creation and detail view. Categories are treated as a list field based
+    on their unique name"""
+
+    categories = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        write_only=True
     )
 
     class Meta:
@@ -46,3 +46,8 @@ class PuzzleSerializer(serializers.ModelSerializer):
             puzzle.categories.add(category)
         
         return puzzle
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['categories'] = [category.name for category in instance.categories.all()]
+        return representation
