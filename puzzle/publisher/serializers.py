@@ -24,12 +24,10 @@ class PuzzleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Puzzle
-        fields = [
-            'id', 'title', 'difficulty', 'description', 
-            'time_constraint', 'memory_constraint', 'categories',
-            'visibility', 'publisher'
-        ]
-        read_only_fields = ['publisher']
+        fields = (
+            'id', 'title', 'difficulty', 'description', 'time_constraint', 'memory_constraint', 'categories', 'visibility', 'publisher'
+        )
+        read_only_fields = ('id', 'publisher')
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -51,3 +49,23 @@ class PuzzleSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['categories'] = [category.name for category in instance.categories.all()]
         return representation
+
+
+class PuzzleEditSerializer(PuzzleSerializer):
+    def update(self, instance, validated_data):
+        # Update categories by their name
+        category_names = validated_data.pop('categories', None)
+
+        if category_names is not None:
+            instance.categories.clear()
+            
+            for cat in category_names:
+                category, _ = models.Category.objects.get_or_create(name=cat)
+                instance.categories.add(category)
+        
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance    

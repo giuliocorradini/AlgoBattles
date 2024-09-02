@@ -12,7 +12,7 @@ from utils.permissions import IsBrowserAuthenticated
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import F
 from .permissions import IsPublisherPermission
-from .serializers import PuzzleListSerializer, PuzzleSerializer
+from .serializers import PuzzleListSerializer, PuzzleSerializer, PuzzleEditSerializer
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 100
@@ -45,4 +45,7 @@ class PuzzleDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     authentication_classes = (TokenAuthentication, )
     permission_classes = (IsBrowserAuthenticated, IsPublisherPermission)
-    serializer_class = PuzzleSerializer
+    serializer_class = PuzzleEditSerializer
+
+    def get_queryset(self):
+        return Puzzle.objects.filter(publisher=self.request.user)
