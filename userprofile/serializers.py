@@ -19,10 +19,11 @@ class UserFullInformationSerializer(serializers.ModelSerializer):
     picture = serializers.ImageField(required=False, allow_null=True, use_url=True, read_only=True)
     github = serializers.CharField(allow_blank=True)
     linkedin = serializers.CharField(allow_blank=True)
+    is_publisher = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ("username", "email", "first_name", "last_name", "github", "linkedin", "picture")
+        fields = ("username", "email", "first_name", "last_name", "github", "linkedin", "picture", "is_publisher")
 
     class UserSerializer(serializers.ModelSerializer):
         class Meta:
@@ -40,6 +41,9 @@ class UserFullInformationSerializer(serializers.ModelSerializer):
             user_serializer.save()
 
         return super().update(instance, validated_data)
+    
+    def get_is_publisher(self, obj):
+        return obj.user.groups.filter(name="Publishers").exists()
 
 
 class UserPasswordSerializer(serializers.Serializer):
