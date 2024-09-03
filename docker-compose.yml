@@ -25,6 +25,8 @@ services:
         source: ~/.cache/huggingface/datasets
         target: /usr/datasets
       - static_files:/usr/src/staticfiles
+    networks:
+      - internal_network
     command: bash -c "/usr/src/.venv/bin/python -m manage migrate && /usr/src/.venv/bin/python -m manage collectstatic <<< yes && /usr/src/.venv/bin/python -m manage runserver 0.0.0.0:8000"
 
   db:
@@ -38,12 +40,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - internal_network
 
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - internal_network
 
   rabbitmq:
     image: rabbitmq
@@ -53,18 +59,31 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - internal_network
 
   nginx:
     image: algobattles-nginx:latest
     container_name: nginx
-    build: ./nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
     volumes:
       - static_files:/usr/share/nginx/html/static
     ports:
       - "80:80"
     depends_on:
       - django
+    networks:
+      - internal_network
+      - external_network
 
 volumes:
   postgres_data:
   static_files:
+
+networks:
+  internal_network:
+    driver: bridge
+  external_network:
+    driver: bridge
