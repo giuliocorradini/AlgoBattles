@@ -55,7 +55,7 @@ class CreatePuzzleView(generics.CreateAPIView):
     """Publish a new puzzle"""
 
     authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsBrowserAuthenticated, IsPublisherPermission)
+    permission_classes = (IsCORSOptions | IsPublisherPermission, )
     serializer_class = PuzzleSerializer
     queryset = Puzzle.objects.all()
 
@@ -64,7 +64,7 @@ class PuzzleDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Gets details about puzzle, allows update and destroy"""
 
     authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsBrowserAuthenticated, IsPublisherPermission)
+    permission_classes = (IsCORSOptions | IsPublisherPermission, )
     serializer_class = PuzzleEditSerializer
 
     def get_queryset(self):
