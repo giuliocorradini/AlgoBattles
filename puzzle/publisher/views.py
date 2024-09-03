@@ -10,7 +10,7 @@ import logging
 from django.db.models import Exists, OuterRef
 from utils.permissions import IsBrowserAuthenticated, IsCORSOptions
 from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db.models import F
+from django.db.models import F, Value
 from .permissions import IsPublisherPermission
 from .serializers import PuzzleListSerializer, PuzzleSerializer, PuzzleEditSerializer
 
@@ -28,6 +28,27 @@ class PublishedPuzzles(generics.ListAPIView):
 
     def get_queryset(self):
         return Puzzle.objects.filter(publisher=self.request.user)
+
+
+class SearchPublisherPuzzleView(generics.ListAPIView):
+    """Full text search on puzzle description and title for publisher."""
+    serializer_class = PuzzleListSerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = (IsCORSOptions | IsPublisherPermission, )
+
+    def get_queryset(self):
+        search_query = self.request.query_params.get('q', None)
+        queryset = Puzzle.objects.filter(publisher=self.request.user)
+
+        if search_query:
+            query = SearchQuery(search_query)
+            rank=SearchRank(F('search_vector'), query, normalization=Value(2))
+
+            queryset = queryset.annotate(rank=rank).filter(rank__gt=0.001).order_by('-rank')
+        else:
+            queryset = Puzzle.objects.none()
+
+        return queryset
 
 
 class CreatePuzzleView(generics.CreateAPIView):
