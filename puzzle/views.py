@@ -214,7 +214,7 @@ class SearchPuzzleView(generics.ListAPIView):
 
         if search_query:
             query = SearchQuery(search_query)
-            queryset = queryset.annotate(rank=SearchRank(F('search_vector'), query)).order_by('-rank')
+            queryset = queryset.annotate(rank=SearchRank(F('search_vector'), query)).filter(rank__gt=0.0001).order_by('-rank')
         else:
             queryset = Puzzle.objects.none()
 
