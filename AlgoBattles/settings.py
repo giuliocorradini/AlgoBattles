@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "unique_user_email",
     'rest_framework',
     'rest_framework.authtoken',
     'django_celery_results'

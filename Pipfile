@@ -15,6 +15,7 @@ channels-redis = "*"
 psycopg2 = "*"
 datasets = "*"
 dj-database-url = "*"
+django-unique-user-email = "*"
 
 [dev-packages]
 
