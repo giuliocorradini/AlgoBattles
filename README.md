@@ -71,3 +71,7 @@ You may do so with:
 ```sh
 
 ```
+
+## Docker
+
+When building the nginx image, you may want to download and install node_modules beforehand, before starting the actual building itself.
