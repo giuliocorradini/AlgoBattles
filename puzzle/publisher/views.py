@@ -8,22 +8,21 @@ from ..models import Puzzle, Category, PuzzleTest, Development, Attempt
 from engine.tasks import test_chain
 import logging
 from django.db.models import Exists, OuterRef
-from utils.permissions import IsBrowserAuthenticated
+from utils.permissions import IsBrowserAuthenticated, IsCORSOptions
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import F
 from .permissions import IsPublisherPermission
 from .serializers import PuzzleListSerializer, PuzzleSerializer, PuzzleEditSerializer
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
-    page_size = 100
+    page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 1000
 
 class PublishedPuzzles(generics.ListAPIView):
     """Get published puzzles"""
     
     authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsBrowserAuthenticated, IsPublisherPermission)
+    permission_classes = (IsCORSOptions | IsPublisherPermission, )
     pagination_class = StandardResultsSetPagination
     serializer_class = PuzzleListSerializer
 
