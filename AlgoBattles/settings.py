@@ -140,7 +140,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = (BASE_DIR / "static", )
-STATIC_ROOT = '/usr/src/staticfiles'
+STATIC_ROOT = '/usr/src/staticfiles/'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = '/usr/src/staticfiles/media/' if not DEBUG else "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -162,6 +165,8 @@ REST_FRAMEWORK = {
 # Celery
 
 CELERY_RESULT_BACKEND = "django-db"
+if not DEBUG:
+    CELERY_RESULT_BACKEND = os.environ.get("RABBITMQ_URL")
 
 # Django Channels 
 
@@ -170,3 +175,8 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer"
     }
 }
+
+if not DEBUG:
+    CHANNEL_LAYERS["default"]["CONFIG"] = {
+        "hosts": [os.environ.get("REDIS_URL")]
+    }
