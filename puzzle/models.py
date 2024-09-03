@@ -67,6 +67,9 @@ class Puzzle(models.Model):
 
     publisher = models.ForeignKey(User, on_delete=models.SET_DEFAULT, null=True, default=None)
 
+    def __str__(self):
+        return f"{self.id} {self.title}"
+
 
 class PuzzleTest(models.Model):
     input = models.TextField()

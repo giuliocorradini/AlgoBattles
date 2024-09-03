@@ -33,9 +33,6 @@ def test_chain(language, source, uid, tests):
 
 @task_postrun.connect
 def update_task_status(sender, task_id, task, args, kwargs, retval, state, **extra):
-    import os
-    print(f"Hello I am {os.getpid()}")
-
     if task == build and state == "IGNORED":
         uid = args[2]
         

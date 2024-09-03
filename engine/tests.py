@@ -7,9 +7,9 @@ import random
 
 class TestBuild(TestCase):
     def setUp(self):
-        self.uid = str(random.random())
+        self.uid = str(random.randint(1000, 200000))
         while os.path.exists(os.path.join(engine.workingdir, self.uid)):
-            self.uid = str(random.random())
+            self.uid = str(random.randint(1000, 200000))
 
     @staticmethod
     def valid_c_source():
