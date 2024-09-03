@@ -142,3 +142,10 @@ class Engine():
 
         return ret
     
+    @classmethod
+    def get_instance(cls):
+        if not hasattr(cls, "instance"):
+            cls.instance = Engine()
+
+        return cls.instance
+    

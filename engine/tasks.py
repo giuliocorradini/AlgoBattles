@@ -7,10 +7,10 @@ from puzzle.models import Attempt
 from .engine import Engine, CompileTimeError
 import json
 
-engine = Engine()
-
 @shared_task(bind=True)
 def build(self, language, source, uid):
+    engine = Engine.get_instance()
+
     try:
         return engine.compile(language, source, uid)
     except CompileTimeError as e:
@@ -19,6 +19,7 @@ def build(self, language, source, uid):
 
 @shared_task
 def test(chunk, uid, tests):
+    engine = Engine.get_instance()
     return engine.test(chunk, uid, tests)
 
 def test_chain(language, source, uid, tests):
