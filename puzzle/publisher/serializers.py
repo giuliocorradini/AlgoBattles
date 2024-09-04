@@ -21,7 +21,7 @@ class PuzzleSerializer(serializers.ModelSerializer):
     """Serializes a puzzle for creation and detail view. Categories are treated as a list field based
     on their unique name"""
 
-    tests = PuzzleTestSerializer(many=True, write_only=True)
+    tests = PuzzleTestSerializer(many=True, write_only=True, required=False)
     categories = serializers.ListField(
         child=serializers.CharField(max_length=100),
         write_only=True
