@@ -186,8 +186,9 @@ class AttemptedPuzzleView(generics.ListAPIView):
                     puzzle=OuterRef('pk'),
                     user=self.request.user
                 )
-            )
-        )
+            ),
+            ~Q(visibility=Puzzle.Visibility.PRIVATE)
+        ).order_by("-development__id")
     
 
 class CompletedPuzzleView(generics.ListAPIView):
@@ -206,8 +207,9 @@ class CompletedPuzzleView(generics.ListAPIView):
                     user=self.request.user,
                     completed=True
                 )
-            )
-        )
+            ),
+            ~Q(visibility=Puzzle.Visibility.PRIVATE)
+        ).order_by("-development__id")
 
 
 class SearchPuzzleView(generics.ListAPIView):

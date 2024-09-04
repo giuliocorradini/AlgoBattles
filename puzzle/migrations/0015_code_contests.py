@@ -3,6 +3,7 @@
 from django.db import migrations
 from datasets import load_dataset
 import sys
+import re
 
 isTesting = ("test" in sys.argv)
 
@@ -55,8 +56,11 @@ def import_into_db(apps, schema_editor):
         time_limit = item.get("time_limit")
         time_limit = time_limit.get("seconds") * 1000 + time_limit.get("nanos") if time_limit else 0
 
+        title = item.get("name")
+        title = re.sub(r'^\d+_[a-zA-Z]\.\s', '', title)
+
         p = Puzzle.objects.create(
-            title=item.get("name"),
+            title=title,
             difficulty=get_difficulty_for(item),
             description=item.get("description"),
             time_constraint=time_limit,
