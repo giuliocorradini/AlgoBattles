@@ -33,6 +33,34 @@ server {
         try_files $uri $uri/ =404;
     }
 
+    location /recent {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /editor {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /login {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /register {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /settings {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /multiplayer {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /publisher {
+        try_files $uri $uri/ /index.html;
+    }
+
     location /ui/ {
         rewrite ^/ui/(.*)$ /$1 break;
         try_files $uri $uri/ /index.html;
