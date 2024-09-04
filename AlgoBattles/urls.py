@@ -21,5 +21,5 @@ urlpatterns = [
     path('api/', include("puzzle.urls")),
     path('admin/', admin.site.urls),
     path('api/auth/', include("restauth.urls")),
-    path('api/user', include("userprofile.urls")),
+    path('api/user/', include("userprofile.urls")),
 ]
