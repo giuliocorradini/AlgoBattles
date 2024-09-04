@@ -167,7 +167,7 @@ REST_FRAMEWORK = {
 
 CELERY_RESULT_BACKEND = "django-db"
 if not DEBUG:
-    CELERY_RESULT_BACKEND = os.environ.get("RABBITMQ_URL")
+    CELERY_BROKER_URL = os.environ.get("RABBITMQ_URL")
 
 # Django Channels 
 
@@ -181,3 +181,5 @@ if not DEBUG:
     CHANNEL_LAYERS["default"]["CONFIG"] = {
         "hosts": [os.environ.get("REDIS_URL")]
     }
+
+ENGINE_WORKDIR = "abengine-workdir" if DEBUG else os.environ.get("ALGOBATTLES_ENGINE_WORKDIR", "/usr/abengine")

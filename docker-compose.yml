@@ -18,16 +18,36 @@ services:
       - redis
       - rabbitmq
     volumes:
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
       - type: bind  # Use locally available datasets
         source: ~/.cache/huggingface/datasets
         target: /usr/datasets
       - static_files:/usr/src/staticfiles
+      - attempts_files:/usr/abengine
     networks:
       - internal_network
     command: bash -c "/usr/src/.venv/bin/python -m manage migrate && /usr/src/.venv/bin/python -m manage collectstatic <<< yes && /usr/src/.venv/bin/python -m manage runserver 0.0.0.0:8000"
+
+  worker:
+    image: algobattles:latest
+    container_name: worker
+    build: .  # Build image from current directory Dockerfile
+    environment:
+      - DJANGO_SETTINGS_MODULE=AlgoBattles.settings
+      - DATABASE_URL=postgres://postgres:algobattles@db:5432/algobattles
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - attempts_files:/usr/abengine
+    networks:
+      - internal_network
+    command: bash -c "source /usr/src/.venv/bin/activate; celery -A AlgoBattles worker"
 
   db:
     image: postgres:latest
@@ -81,6 +101,7 @@ services:
 volumes:
   postgres_data:
   static_files:
+  attempts_files:
 
 networks:
   internal_network:

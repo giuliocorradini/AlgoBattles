@@ -17,6 +17,8 @@ import docker.models.containers
 
 from .language import C, Cpp
 
+from AlgoBattles import settings
+
 class CompileTimeError(Exception):
     def __init__(self, logs):
         super().__init__(logs)
@@ -49,7 +51,7 @@ class Engine():
         
     def configure(self):
         self.client = docker.from_env()
-        self.workingdir = "abengine-workdir"
+        self.workingdir = settings.ENGINE_WORKDIR
         os.makedirs(self.workingdir, exist_ok=True)
     
     def _save_source(self, chunk: Chunk, source, language):
@@ -108,7 +110,7 @@ class Engine():
         with open(os.path.join(chunk, "tests.txt"), "w") as fp:
             json.dump(tests, fp)
 
-    def test(self, chunk, uid, tests):
+    def test(self, chunk, uid, tests, timeout=0, memlimit=0):
         """Test compiled binary against private test cases."""
 
         self._put_tests_file(chunk, tests)
@@ -117,7 +119,7 @@ class Engine():
             image = "algobattles-solver",
             volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
             network_disabled = True,
-            command=f"python solver.py {1000000}"
+            command=f"python solver.py {timeout} {memlimit}"
         )
 
         try:
