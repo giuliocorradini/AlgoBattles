@@ -17,13 +17,13 @@ class TestCORSOnUserFullInformation(TestCase):
 
     def test_options_has_permission(self):
         client = Client()
-        response = client.options("/api/user")
+        response = client.options("/api/user/")
 
         self.assertEqual(response.status_code, 200)
 
     def test_get_unauth(self):
         client = Client()
-        response = client.get("/api/user")
+        response = client.get("/api/user/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -31,7 +31,7 @@ class TestCORSOnUserFullInformation(TestCase):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
 
-        response = client.get("/api/user")
+        response = client.get("/api/user/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.get("username"), "test")
@@ -63,7 +63,7 @@ class TestCORSOnUserFullInformation(TestCase):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION=f"Token {pubtoken.key}")
 
-        response = client.get("/api/user")
+        response = client.get("/api/user/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.get("username"), "publisher")
