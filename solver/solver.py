@@ -68,4 +68,4 @@ def main(timeout, memory_limit) -> int:
     print(json.dumps(results))
 
 if __name__ == "__main__":
-    main(*sys.argv[1:2])
+    main(*sys.argv[1:3])

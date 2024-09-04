@@ -125,12 +125,14 @@ class AttemptsView(viewsets.ModelViewSet):
         uid = str(a.pk)
 
         priv_tests = PuzzleTest.objects.filter(puzzle__id=pk, is_private=True)
+        puzzle = Puzzle.objects.filter(id=pk).get()
 
         tests = [(i, t.input, t.output) for i, t in enumerate(priv_tests)]
 
-        print(tests)
+        logging.debug(tests)
+        logging.debug(f"{puzzle.time_constraint} s, {puzzle.memory_constraint} B")
 
-        task_result = test_chain(request.data.get("language"), request.data.get("source"), uid, tests)
+        task_result = test_chain(request.data.get("language"), request.data.get("source"), uid, tests, puzzle.time_constraint, puzzle.memory_constraint)
         a.task_id = task_result.id
         a.save()
 
