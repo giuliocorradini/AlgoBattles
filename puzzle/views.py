@@ -9,7 +9,7 @@ import logging
 from django.db.models import Exists, OuterRef
 from utils.permissions import IsBrowserAuthenticated
 from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db.models import F
+from django.db.models import F, Q
 
 MAX_FEATURED = 10   #TODO: move to settings.py
 
@@ -39,7 +39,7 @@ class PuzzleList(generics.ListAPIView):
         category = self.request.query_params.get("category", None)
         difficulty = self.request.query_params.get("difficulty", None)
 
-        puzzles = Puzzle.objects.all()
+        puzzles = Puzzle.objects.filter(visibility=Puzzle.Visibility.PUBLIC)
 
         if category is not None:
             category = category.lower()
@@ -60,7 +60,7 @@ class PuzzleView(generics.RetrieveAPIView):
         except ValueError:
             return Puzzle.objects.none
 
-        return Puzzle.objects.filter(pk=pk)
+        return Puzzle.objects.filter(~Q(visibility=Puzzle.Visibility.PRIVATE), pk=pk)
     
 
 class FeaturedPuzzleView(views.APIView):
@@ -69,7 +69,7 @@ class FeaturedPuzzleView(views.APIView):
 
         featured_cats = Category.objects.filter(featured=True)
         puzzles = [
-            Puzzle.objects.filter(categories=fcat)[:MAX_FEATURED] for fcat in featured_cats
+            Puzzle.objects.filter(visibility=Puzzle.Visibility.PUBLIC, categories=fcat)[:MAX_FEATURED] for fcat in featured_cats
         ]
 
         data = [
@@ -83,7 +83,14 @@ class FeaturedPuzzleView(views.APIView):
 
 @api_view(["GET"])
 def public_tests_for_puzzle(request, pk):
-    queryset = PuzzleTest.objects.all().filter(puzzle__id=pk, is_private=False)
+    queryset = PuzzleTest.objects.filter(
+        Exists(
+            Puzzle.objects.filter(
+                ~Q(visibility=Puzzle.Visibility.PRIVATE),
+                id=OuterRef('puzzle')
+            )
+        ),
+        puzzle__id=pk, is_private=False)
     serializer = serializers.PuzzleTestListSerializer(queryset, many=True)
 
     return Response(serializer.data, status.HTTP_200_OK)
@@ -212,7 +219,7 @@ class SearchPuzzleView(generics.ListAPIView):
 
     def get_queryset(self):
         search_query = self.request.query_params.get('t', None)
-        queryset = Puzzle.objects.all()
+        queryset = Puzzle.objects.filter(~Q(visibility=Puzzle.Visibility.PRIVATE))
 
         if search_query:
             query = SearchQuery(search_query)
