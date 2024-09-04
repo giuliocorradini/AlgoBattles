@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 django = "*"
 djangorestframework = "*"
-celery = "*"
 django-celery-results = "*"
 pillow = "*"
 docker = "*"
@@ -16,6 +15,7 @@ psycopg2 = "*"
 datasets = "*"
 dj-database-url = "*"
 django-unique-user-email = "*"
+celery = {extras = ["redis"], version = "*"}
 
 [dev-packages]
 

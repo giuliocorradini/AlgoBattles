@@ -9,7 +9,6 @@ services:
       - DJANGO_SETTINGS_MODULE=AlgoBattles.settings
       - DATABASE_URL=postgres://postgres:algobattles@db:5432/algobattles
       - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - HF_DATASETS_CACHE=/usr/datasets
     ports:
       - "8000:8000"
@@ -35,7 +34,6 @@ services:
       - DJANGO_SETTINGS_MODULE=AlgoBattles.settings
       - DATABASE_URL=postgres://postgres:algobattles@db:5432/algobattles
       - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - db
       - redis
