@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import dj_database_url
 import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -166,8 +167,11 @@ REST_FRAMEWORK = {
 # Celery
 
 CELERY_RESULT_BACKEND = "django-db"
-if not DEBUG:
-    CELERY_BROKER_URL = os.environ.get("RABBITMQ_URL")
+CELERY_BROKER_URL = os.environ.get("REDIS_URL") if not DEBUG else "redis://localhost:6379/0"
+
+if 'test' in sys.argv:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 # Django Channels 
 
