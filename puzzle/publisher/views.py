@@ -27,7 +27,7 @@ class PublishedPuzzles(generics.ListAPIView):
     serializer_class = PuzzleListSerializer
 
     def get_queryset(self):
-        return Puzzle.objects.filter(publisher=self.request.user)
+        return Puzzle.objects.filter(publisher=self.request.user).order_by("-id")
 
 
 class SearchPublisherPuzzleView(generics.ListAPIView):
