@@ -31,10 +31,14 @@ def main(timeout, memory_limit) -> int:
         for i, in_line, expected_out in tests:
             try:
                 result = subprocess.Popen("/chunk/artifact", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result.communicate(in_line.encode())
                 
                 start_time = time.time_ns()
                 
-                while result.poll() is None:
+                do = True
+                while do or result.poll() is None:
+                    do = False
+
                     # Check memory usage
                     mem_usage = process.memory_info().rss
                     if memory_limit != 0 and mem_usage > memory_limit:
@@ -50,16 +54,17 @@ def main(timeout, memory_limit) -> int:
                         results[i] = "timeout"
                         break
                     
-                    time.sleep(0.1)
+                    time.sleep(0.0001)
 
-                produced_output, _ = result.communicate()
-                produced_output = produced_output.decode()
-                if produced_output == expected_out:
-                    logging.info(f"Test {i} passed")
-                    results[i] = "passed"
                 else:
-                    logging.warning(f"Test {i} not passed. Expected {expected_out} but got {produced_output}")
-                    results[i] = "failed"
+                    produced_output, _ = result.communicate()
+                    produced_output = produced_output.decode()
+                    if produced_output == expected_out:
+                        logging.info(f"Test {i} passed")
+                        results[i] = "passed"
+                    else:
+                        logging.warning(f"Test {i} not passed. Expected {expected_out} but got {produced_output}")
+                        results[i] = "failed"
             
             except Exception as e:
                 logging.error(f"Test case {i} terminated due to error {str(e)}")
