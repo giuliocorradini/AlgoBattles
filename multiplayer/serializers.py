@@ -23,7 +23,5 @@ class ChallengeSerializer(serializers.ModelSerializer):
         fields = ("id", "sender")
 
     def get_sender(self, obj: Challenge):
-        return {
-            "id": obj.starter.user.id,
-            "username": obj.starter.user.username
-        }
+        user = Profile.objects.filter(user=obj.starter.user).get()
+        return UserLobbySerializer(user).data
