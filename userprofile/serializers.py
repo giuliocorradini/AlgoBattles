@@ -54,7 +54,6 @@ class UserPasswordSerializer(serializers.Serializer):
         model = User
     
 
-#TODO: refactor User with Profile or Userprofile
 class UserInformationSerializer(serializers.ModelSerializer):
     """
     This class provides user information except email.

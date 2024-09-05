@@ -11,7 +11,7 @@ from utils.permissions import IsBrowserAuthenticated
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import F, Q
 
-MAX_FEATURED = 10   #TODO: move to settings.py
+MAX_FEATURED = 10
 
 logging.basicConfig(level=logging.INFO)
 
@@ -214,7 +214,6 @@ class CompletedPuzzleView(generics.ListAPIView):
 
 class SearchPuzzleView(generics.ListAPIView):
     """Full text search on puzzle description.
-    TODO: set ranking on results
     """
     serializer_class = serializers.PuzzleListSerializer
     pagination_class = StandardResultsSetPagination

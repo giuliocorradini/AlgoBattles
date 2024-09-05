@@ -94,8 +94,6 @@ class ProfilePictureView(UpdateAPIView):
     permission_classes = [IsBrowserAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    #TODO: limit size
-    #TODO: rename file on upload
 
     def get_object(self):
         return Profile.objects.get(user=self.request.user)
