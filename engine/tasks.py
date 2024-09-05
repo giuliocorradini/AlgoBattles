@@ -6,6 +6,7 @@ from django_celery_results.models import TaskResult
 from puzzle.models import Attempt
 from .engine import Engine, CompileTimeError
 import json
+import logging
 
 @shared_task(bind=True)
 def build(self, language, source, uid):
@@ -57,9 +58,12 @@ def update_task_status(sender, task_id, task, args, kwargs, retval, state, **ext
                 return
 
             status, data = retval
-            results = json.loads(data)
             if status == "solver_success":
+                results = json.loads(data)
                 att.passed = all(map(lambda x: x == "passed", results.values()))
-            
+            else:
+                att.build_error = True
+                logging.warning(retval)
+
             att.results = data
             att.save()

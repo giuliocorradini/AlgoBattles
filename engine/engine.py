@@ -115,11 +115,15 @@ class Engine():
 
         self._put_tests_file(chunk, tests)
 
+        solver_volumes =  {chunk: {'bind': "/chunk", 'mode': 'rw'}} if settings.DEBUG else {
+            "algobattles_attempts_files": {"bind": "/usr/abengine", "mode": "rw"}
+        }
         worker = self.client.containers.create(
             image = "algobattles-solver",
-            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+            volumes = solver_volumes,
+            working_dir = "/chunk" if settings.DEBUG else chunk,
             network_disabled = True,
-            command=f"python solver.py {timeout} {memlimit}"
+            command=f"python /app/solver.py {timeout} {memlimit}"
         )
 
         try:

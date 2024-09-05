@@ -26,11 +26,11 @@ def main(timeout, memory_limit) -> int:
     memory_limit = int(memory_limit)
     process = psutil.Process()
 
-    with open("/chunk/tests.txt", "r") as tfp:
+    with open("./tests.txt", "r") as tfp:
         tests = json.load(fp=tfp)
         for i, in_line, expected_out in tests:
             try:
-                result = subprocess.Popen("/chunk/artifact", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result = subprocess.Popen("./artifact", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 result.communicate(in_line.encode())
                 
                 start_time = time.time_ns()

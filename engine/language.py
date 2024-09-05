@@ -1,4 +1,5 @@
 from docker.models.containers import Container
+from AlgoBattles import settings
 
 class Language():
     """This class defines a supported language, with its extension and the command
@@ -21,11 +22,20 @@ class C(Language):
         super().__init__("c", ".c")
 
     def get_compiler(self, docker, chunk) -> Container:
+        if settings.DEBUG:
+            return docker.containers.create(
+                image = "gcc:11",
+                command = "gcc -o artifact source.c",
+                volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+                working_dir = "/chunk",
+                network_disabled = True
+            )
+        
         return docker.containers.create(
             image = "gcc:11",
-            command = "gcc -fpermissive -o artifact source.c",
-            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
-            working_dir = "/chunk",
+            command = "gcc -o artifact source.c",
+            volumes = {"algobattles_attempts_files": {'bind': "/usr/abengine", 'mode': 'rw'}},
+            working_dir = chunk,
             network_disabled = True
         )
     
@@ -34,11 +44,20 @@ class Cpp(Language):
         super().__init__("c++", ".cpp")
 
     def get_compiler(self, docker, chunk) -> Container:
+        if settings.DEBUG:
+            return docker.containers.create(
+                image = "gcc:11",
+                command = "g++ -fpermissive -o artifact source.cpp",
+                volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
+                working_dir = "/chunk",
+                network_disabled = True
+            )
+    
         return docker.containers.create(
             image = "gcc:11",
             command = "g++ -fpermissive -o artifact source.cpp",
-            volumes = {chunk: {'bind': "/chunk", 'mode': 'rw'}},
-            working_dir = "/chunk",
+            volumes = {"algobattles_attempts_files": {'bind': "/usr/abengine", 'mode': 'rw'}},
+            working_dir = chunk,
             network_disabled = True
         )
     
