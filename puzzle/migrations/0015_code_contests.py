@@ -1,6 +1,6 @@
 # Code Contests dataset import
 
-from django.db import migrations
+from django.db import migrations, transaction
 from datasets import load_dataset
 import sys
 import re
@@ -30,6 +30,10 @@ def get_difficulty_for(item):
         return "M"
     else:
         return "H"
+    
+def extract_category(category_and_created):
+    c, _ = category_and_created
+    return c
 
 def import_into_db(apps, schema_editor):
     ds = load_train_dataset()
@@ -40,7 +44,7 @@ def import_into_db(apps, schema_editor):
 
     for item in ds:
         categories = [
-            c for c, _ in map(lambda tag: Category.objects.get_or_create(name=tag), item.get("cf_tags"))
+            extract_category(Category.objects.get_or_create(name=cat_name)) for cat_name in item.get("cf_tags")
         ]
 
         private_tests = item.get("private_tests")
@@ -70,24 +74,35 @@ def import_into_db(apps, schema_editor):
         p.categories.set(categories)
         p.save()
 
-        print(p)
+        print(f"{p.id} {p.title}")
 
-        for provided_input, expected_output in zip(private_tests.get("input", []), private_tests.get("output"), []):
-            t = PuzzleTest.objects.create(
-                input=provided_input,
-                output=expected_output,
-                is_private=True,
-                puzzle=p
-            )
+        for provided_input, expected_output in zip(private_tests.get("input", []), private_tests.get("output", [])):
+            try:
+                with transaction.atomic():
+                    t = PuzzleTest.objects.create(
+                        input=provided_input,
+                        output=expected_output,
+                        is_private=True,
+                        puzzle=p
+                    )
+            except Exception:
+                continue
 
-        for provided_input, expected_output in zip(private_tests.get("input", []), private_tests.get("output"), []):
-            t = PuzzleTest.objects.create(
-                input=provided_input,
-                output=expected_output,
-                is_private=False,
-                puzzle=p
-            )
+        print(f"\tPrivate tests: {len(private_tests.get('input'))}")
 
+        for provided_input, expected_output in zip(public_tests.get("input", []), public_tests.get("output", [])):
+            try:
+                with transaction.atomic():
+                    t = PuzzleTest.objects.create(
+                        input=provided_input,
+                        output=expected_output,
+                        is_private=False,
+                        puzzle=p
+                    )
+            except Exception:
+                continue
+
+        print(f"\tPublic tests: {len(public_tests.get('input'))}")
 
 def remove_from_db(apps, schema_editor):
     ds = load_train_dataset()
@@ -96,6 +111,7 @@ def remove_from_db(apps, schema_editor):
 
     for item in ds:
         title = item.get("name")
+        title = re.sub(r'^\d+_[a-zA-Z]\.\s', '', title)
         Puzzle.objects.filter(title=title).delete()
 
 
